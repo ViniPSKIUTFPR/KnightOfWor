@@ -30,10 +30,10 @@ public class Options extends Application {
 		Label controls = new Label("Steuerung");
 		root.add(controls,0,1);
 		
-		Label configuration = new Label("Hoch \t W \n"
-				+ "Runter \t S \n"
-				+ "Links \t A \n"
-				+ "Rechts \t D \n"
+		Label configuration = new Label("Hoch \t W, UP \n"
+				+ "Runter \t S, DOWN \n"
+				+ "Links \t A, LEFT \n"
+				+ "Rechts \t D, RIGHT \n"
 				+ "Schießen  Leertaste \n"
 				+ "Musik an/aus M \n"
 				+ "Pause \t P");
