@@ -39,7 +39,7 @@ public class Keyboard implements EventHandler<KeyEvent> {
 
 	// TimeLine pra impedir o delay na movimentação depois de pressionar a tecla. Duration.millis() define a velocidade do personagem
 	private Timeline createMoveTimeline(Direction dir, Image img) {
-		Timeline t = new Timeline(new KeyFrame(Duration.millis(40), e -> {
+		Timeline t = new Timeline(new KeyFrame(Duration.millis(30), e -> {
 			if (player.isMovable()) {
 				player.setDirection(dir);
 				player.move();
