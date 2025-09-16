@@ -33,13 +33,13 @@ public class TitleScreen extends Application {
 	public void start(final Stage primaryStage) {
 		primaryStage.setTitle("Knight of Wor");
 		primaryStage.setResizable(false);
-		URL pathToTitleMusic = getClass().getResource("KoW.mp3");
+		URL pathToTitleMusic = getClass().getResource("menu.mp3");
 		if (pathToTitleMusic != null) {
 			Media sound = new Media(pathToTitleMusic.toString());
 			player = new MediaPlayer(sound);
 			player.play();
 		} else {
-			System.err.println("Musikdatei 'KoW.mp3' wurde nicht gefunden!");
+			System.err.println("Musikdatei 'menu.mp3' wurde nicht gefunden!");
 		}
 		GridPane grid = new GridPane();
 		grid.setId("titleGrid");

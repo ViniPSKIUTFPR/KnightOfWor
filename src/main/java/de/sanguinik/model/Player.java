@@ -68,12 +68,9 @@ public class Player extends ShootingFigure {
 	public void move(){
 		Figure enemy = checkForCollisionWithEnemies();
 		
-		if(enemy == null && isAllowedToMove){
-			super.move();
-		}else{
-		
-			setAlive(false);
-		}
+		   if(enemy == null && isAllowedToMove){
+			   super.move();
+		   }
 	}
 	
 	
