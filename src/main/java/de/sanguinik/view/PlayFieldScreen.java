@@ -23,6 +23,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -35,7 +38,6 @@ import de.sanguinik.model.Maze;
 import de.sanguinik.model.Player;
 import de.sanguinik.model.ShootCallback;
 import de.sanguinik.model.TypeOfFigure;
-
 public class PlayFieldScreen extends Application {
 
 	private class ShootCallbackImpl implements ShootCallback {
@@ -60,7 +62,10 @@ public class PlayFieldScreen extends Application {
 	private HighscoreEntry entry;
 
 	private Media music;
-	private MediaPlayer mediaPlayer;
+	private MediaPlayer mediaPlayer1;
+	private MediaPlayer mediaPlayer2;
+	private MediaPlayer currentPlayer;
+	private boolean useFirstPlayer = true;
 
 	/**
 	 * Mit dieser Wahrscheinlichkeit wird ein mal pro Sekunde geschossen.
@@ -72,13 +77,24 @@ public class PlayFieldScreen extends Application {
 
 	private Stage primaryStage;
 
-	private Enemy createEnemy(final TypeOfFigure enemyType, final int x,
-			final int y) {
-		Enemy enemy = new Enemy(maze, enemyType, x, y);
+
+	private Enemy createEnemy(final TypeOfFigure enemyType, final int x, final int y) {
+		Enemy enemy;
+		if (enemyType == TypeOfFigure.WIZARD) {
+			enemy = new Enemy(maze, enemyType, x, y, root, player);
+		} else {
+			enemy = new Enemy(maze, enemyType, x, y);
+		}
+		
 		enemy.addTargets(player);
 		enemy.setShootCallback(new ShootCallbackImpl());
-
+		root.getChildren().add(enemy.getGroup());
 		enemyList.add(enemy);
+
+		player.getTargets().clear();
+		for (Enemy e : enemyList) {
+			if (e.isAlive()) player.addTargets(e);
+		}
 		return enemy;
 	}
 
@@ -91,22 +107,44 @@ public class PlayFieldScreen extends Application {
 		URL pathToLevelMusic = getClass().getResource("KoWLong.mp3");
 		if (pathToLevelMusic != null) {
 			music = new Media(pathToLevelMusic.toString());
-			mediaPlayer = new MediaPlayer(music);
+			mediaPlayer1 = new MediaPlayer(music);
+			mediaPlayer2 = new MediaPlayer(music);
+			currentPlayer = mediaPlayer1;
 
-			mediaPlayer.setVolume(0.5);
-			mediaPlayer.play();
+			mediaPlayer1.setVolume(1.0);
+			mediaPlayer2.setVolume(0.0);
+
+			// Duração do crossfade em segundos 
+			final double crossfadeDuration = 0.2;
+
+			mediaPlayer1.currentTimeProperty().addListener((obs, oldTime, newTime) -> {
+				Duration total = mediaPlayer1.getTotalDuration();
+				if (total != null && newTime != null && total.toSeconds() - newTime.toSeconds() <= crossfadeDuration && useFirstPlayer) {
+					startCrossfade(mediaPlayer1, mediaPlayer2, crossfadeDuration);
+					useFirstPlayer = false;
+				}
+			});
+			mediaPlayer2.currentTimeProperty().addListener((obs, oldTime, newTime) -> {
+				Duration total = mediaPlayer2.getTotalDuration();
+				if (total != null && newTime != null && total.toSeconds() - newTime.toSeconds() <= crossfadeDuration && !useFirstPlayer) {
+					startCrossfade(mediaPlayer2, mediaPlayer1, crossfadeDuration);
+					useFirstPlayer = true;
+				}
+			});
+
+			mediaPlayer1.play();
 		} else {
-			System.err.println("Musikdatei 'KoWLong.pm3' nicht gefunden!");
+			System.err.println("Musikdatei 'KoWLong.mp3' nicht gefunden!");
 		}
 		maze = new Maze("level1");
 		player = new Player(maze, START_X_PLAYER_1, START_Y_PLAYER_1);
 		player.setShootCallback(new ShootCallbackImpl());
 
-		final Enemy enemy1 = createEnemy(TypeOfFigure.BURWOR, 130, 130);
-		final Enemy enemy2 = createEnemy(TypeOfFigure.GARWOR, 855, 510);
-		final Enemy enemy3 = createEnemy(TypeOfFigure.THORWOR, 855, 130);
 
-		player.addTargets(enemy1, enemy2, enemy3);
+		createEnemy(TypeOfFigure.BURWOR, 130, 130);
+		createEnemy(TypeOfFigure.GARWOR, 855, 510);
+		createEnemy(TypeOfFigure.THORWOR, 855, 130);
+		createEnemy(TypeOfFigure.WIZARD, 500, 300);
 
 		Label score = new Label("Score: " + player.getScore());
 		
@@ -116,9 +154,6 @@ public class PlayFieldScreen extends Application {
 		Keyboard keyboard = new Keyboard(player, this);
 
 		root.getChildren().add(player.getGroup());
-		root.getChildren().add(enemy1.getGroup());
-		root.getChildren().add(enemy2.getGroup());
-		root.getChildren().add(enemy3.getGroup());
 		root.getChildren().addAll(maze.getWalls());
 		root.getChildren().add(score);
 		root.getChildren().add(lives);
@@ -134,15 +169,20 @@ public class PlayFieldScreen extends Application {
 			public void handle(final ActionEvent t) {
 				
 				introSequence();
+
+				// Checa colisão player-inimigo
+				for (Enemy enemy : enemyList) {
+					if (enemy.isAlive() && player.isAlive() && !player.isInvincible() &&
+						player.getRectangle().getBoundsInParent().intersects(enemy.getRectangle().getBoundsInParent())) {
+						player.setAlive(false);
+						break;
+					}
+				}
 				
 				if(checkThatPlayerIsStillAlive()){
-
 					moveAllEnemies();
-
 					moveAllBullets();
-					
 					score.setText("Score: " + player.getScore());
-					
 				}else{
 					
 					
@@ -190,6 +230,7 @@ public class PlayFieldScreen extends Application {
 		Scene scene = new Scene(root, 1024, 740);
 		scene.getStylesheets().add(TitleScreen.class.getResource("controls.css").toExternalForm());
 		scene.setOnKeyPressed(keyboard);
+		scene.setOnKeyReleased(keyboard);
 
 		scene.setFill(Color.BLACK);
 		primaryStage.setScene(scene);
@@ -199,9 +240,8 @@ public class PlayFieldScreen extends Application {
 			@Override
 			public void handle(final WindowEvent w) {
 				timeline.stop();
-
-				if (mediaPlayer != null) {
-					mediaPlayer.stop();
+				if (currentPlayer != null) {
+					currentPlayer.stop();
 				}
 				System.exit(0);
 			}
@@ -219,10 +259,13 @@ public class PlayFieldScreen extends Application {
 	}
 	
 	private void enterHighscore(){
-		if (mediaPlayer != null) {
-			mediaPlayer.stop();
+		if (currentPlayer != null) {
+			currentPlayer.stop();
 		}
 		timeline.stop();
+		for (Enemy e : enemyList) {
+			if (e.getType() == TypeOfFigure.WIZARD) e.stopWizardAttack();
+		}
 		int finalScore = player.getScore();
 		String playerName = "Spieler 1";
 		Label playersPoints = new Label("Du hast "+finalScore+ " Punkte!");
@@ -242,63 +285,59 @@ public class PlayFieldScreen extends Application {
 		highscorePopup.setLayoutX(root.getScene().getWidth()/2 - 120);
 		highscorePopup.setLayoutY(root.getScene().getHeight() - 100);
 		root.getChildren().add(highscorePopup);
-		
 		ok.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent arg0) {
 				//highscore eintragen
 				entry = new HighscoreEntry(name.getText(), finalScore);
-				
+            
 				//gameover
 				gameOver();
 			}
 		});
-		
-		
 	}
 	
 	private void introSequence() {
 		Label ready = new Label("READY?");
-		
 		ready.setLayoutX(root.getScene().getWidth()/2);
 		ready.setLayoutY(root.getScene().getHeight()/2);
-		
+
 		if(gameWasPaused){
-			
 			timeline.pause();
+			// Pausa ataques de todos os magos
+			for (Enemy e : enemyList) {
+				if (e.getType() == TypeOfFigure.WIZARD) e.stopWizardAttack();
+			}
 			root.getChildren().add(ready);
 			Timer timer = new Timer();
-			
-			timer.schedule(new TimerTask(){
 
+			timer.schedule(new TimerTask(){
 				@Override
 				public void run() {
 					Platform.runLater(() -> {
 						ready.setText("START!");
 					});
-					
 				}
 			}, 1000);
-			
-			timer.schedule(new TimerTask(){
 
+			timer.schedule(new TimerTask(){
 				@Override
 				public void run() {
 					Platform.runLater(() -> {
-						
 						timeline.play();
 						player.toggleMoveable();
 						root.getChildren().remove(ready);
+						// Retoma ataques de todos os magos
+						for (Enemy e : enemyList) {
+							if (e.getType() == TypeOfFigure.WIZARD) e.startWizardAttack();
+						}
 					});
 				}
-				
 			}, 2000);
-				
+
 			gameWasPaused = false;
 		}
-		
-		
 	}
 
 	private void moveAllBullets() {
@@ -345,31 +384,62 @@ public class PlayFieldScreen extends Application {
 	private void gameOver() {
 		final GameOver gameOver = new GameOver();
 		gameOver.start(primaryStage);
-		if (mediaPlayer != null) {
-			mediaPlayer.stop();
+		if (currentPlayer != null) {
+			currentPlayer.stop();
 		}
 	}
 	
 	public void pauseGame(){
-		
 		if(gameWasPaused){
 			root.getChildren().remove(pause);
 			timeline.play();
+			for (Enemy e : enemyList) {
+    			e.startWizardAttack(); 
+			}
 			gameWasPaused = false;
 		}else{
 			pause.setLayoutX(root.getScene().getWidth()/2);
 			pause.setLayoutY(root.getScene().getHeight()/2);
 			root.getChildren().add(pause);
+			for (Enemy e : enemyList) {
+    			e.stopWizardAttack(); 
+			}
 			timeline.pause();
+
 			gameWasPaused = true;
 		}
 	}
 
 	public void muteMusic() {
-		if(mediaPlayer.isMute()){
-			mediaPlayer.setMute(false);
-		}else{
-			mediaPlayer.setMute(true);
+		if(currentPlayer != null) {
+			if(currentPlayer.isMute()){
+				currentPlayer.setMute(false);
+			}else{
+				currentPlayer.setMute(true);
+			}
 		}
 	}
+
+	// Crossfade da música (impede que haja um corte seco entre cada loop da trilha sonora)
+	private void startCrossfade(MediaPlayer fadingOut, MediaPlayer fadingIn, double durationSeconds) {
+		fadingIn.seek(Duration.ZERO);
+		fadingIn.play();
+		Timeline fade = new Timeline(
+			new KeyFrame(Duration.ZERO,
+				e -> {
+				},
+				new javafx.animation.KeyValue(fadingOut.volumeProperty(), fadingOut.getVolume()),
+				new javafx.animation.KeyValue(fadingIn.volumeProperty(), 0.0)
+			),
+			new KeyFrame(Duration.seconds(durationSeconds),
+				e -> {
+					fadingOut.pause();
+					currentPlayer = fadingIn;
+				},
+				new javafx.animation.KeyValue(fadingOut.volumeProperty(), 0.0),
+				new javafx.animation.KeyValue(fadingIn.volumeProperty(), 1.0)
+			)
+		);
+		fade.play();
+		}
 }

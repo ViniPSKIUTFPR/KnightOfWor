@@ -21,6 +21,13 @@ import javafx.scene.shape.Rectangle;
  * 
  */
 public class Maze{
+	// largura, altura e tamanho 
+	private int width = 32;
+	private int height = 24;
+	private int cellSize = 32;
+	public int getWidth() { return width; }
+	public int getHeight() { return height; }
+	public int getCellSize() { return cellSize; }
 
 	private List<Rectangle> walls = new ArrayList<Rectangle>();
 

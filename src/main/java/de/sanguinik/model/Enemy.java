@@ -4,7 +4,10 @@ import java.util.Random;
 
 import javafx.scene.image.Image;
 
+import javafx.scene.Group;
+
 public class Enemy extends ShootingFigure {
+	private WizardAttack wizardAttack;
 
 	private static final String PACKAGE_PATH = "/de/sanguinik/model/";
 	private static final Image BURWOR_IMAGE = new Image(PACKAGE_PATH
@@ -20,10 +23,30 @@ public class Enemy extends ShootingFigure {
 
 	public Enemy(final Maze maze, final TypeOfFigure type, final double x,
 			final double y) {
+		this(maze, type, x, y, null, null, null);
+	}
+
+	// Construtor para o wizard que chama o contrutor geral
+	public Enemy(final Maze maze, final TypeOfFigure type, final double x, final double y, Group root, Player player) {
+		this(maze, type, x, y, root, player, null);
+	}
+	public void stopWizardAttack() {
+		if (wizardAttack != null) wizardAttack.stop();
+	}
+	public void startWizardAttack() {
+		if (wizardAttack != null) wizardAttack.start();
+	}
+	
+	private Enemy(final Maze maze, final TypeOfFigure type, final double x,
+			final double y, Group root, Player player, Object unused) {
 		super(maze, type, x, y);
 		setImageByMonster(type);
 		getImageView().setX(x);
 		getImageView().setY(y);
+		if (type == TypeOfFigure.WIZARD && root != null && player != null) {
+			wizardAttack = new WizardAttack(root, player, maze);
+			wizardAttack.start();
+		}
 	}
 
 	public String getName() {
@@ -85,8 +108,17 @@ public class Enemy extends ShootingFigure {
 	@Override
 	public void bulletHasHitATarget(final Figure target) {
 		super.bulletHasHitATarget(target);
-
 		target.setAlive(false);
+	}
+
+	@Override
+	public void setAlive(boolean alive) {
+		super.setAlive(alive);
+
+		// Se o mago morrer, para o ataque
+		if (!alive && wizardAttack != null) {
+			wizardAttack.stop();
+		}
 	}
 
 }
