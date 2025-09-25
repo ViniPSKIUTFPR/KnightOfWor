@@ -72,41 +72,34 @@ public class WizardAttack {
 
     private void launchAttack() {
         boolean isVertical = random.nextBoolean();
+
         if (isVertical && gridCols > 0) {
             int col = random.nextInt(gridCols);
             int x = minX + col * cellSize;
-            Rectangle laser = new Rectangle(x, minY, cellSize, maxY - minY);
-            laser.setFill(Color.RED);
-            laser.setOpacity(0.3);
-            root.getChildren().add(laser);
-            Timeline warn = new Timeline(new KeyFrame(Duration.millis(warningMillis), ev -> {
-                laser.setOpacity(0.8);
-                if (blastSound != null && !blastSound.isPlaying()) blastSound.play();
-                if (playerColidesWithLaser(laser)) {
-                    player.setAlive(false);
-                }
-                Timeline remove = new Timeline(new KeyFrame(Duration.millis(activeMillis), ev2 -> root.getChildren().remove(laser)));
-                remove.play();
-            }));
-            warn.play();
+            final Rectangle laser = new Rectangle(x, minY, cellSize, maxY - minY);
+            handleLaserAttack(laser);
         } else if (!isVertical && gridRows > 0) {
             int row = random.nextInt(gridRows);
             int y = minY + row * cellSize;
-            Rectangle laser = new Rectangle(minX, y, maxX - minX, cellSize);
-            laser.setFill(Color.RED);
-            laser.setOpacity(0.3);
-            root.getChildren().add(laser);
-            Timeline warn = new Timeline(new KeyFrame(Duration.millis(warningMillis), ev -> {
-                laser.setOpacity(0.8);
-                if (blastSound != null && !blastSound.isPlaying()) blastSound.play();
-                if (playerColidesWithLaser(laser)) {
-                    player.setAlive(false);
-                }
-                Timeline remove = new Timeline(new KeyFrame(Duration.millis(activeMillis), ev2 -> root.getChildren().remove(laser)));
-                remove.play();
-            }));
-            warn.play();
+            final Rectangle laser = new Rectangle(minX, y, maxX - minX, cellSize);
+            handleLaserAttack(laser);
         }
+    }
+
+    private void handleLaserAttack(final Rectangle laser) {
+        laser.setFill(Color.RED);
+        laser.setOpacity(0.3);
+        root.getChildren().add(laser);
+        Timeline warn = new Timeline(new KeyFrame(Duration.millis(warningMillis), ev -> {
+            laser.setOpacity(0.8);
+            if (blastSound != null && !blastSound.isPlaying()) blastSound.play();
+            if (playerColidesWithLaser(laser)) {
+                player.setAlive(false);
+            }
+            Timeline remove = new Timeline(new KeyFrame(Duration.millis(activeMillis), ev2 -> root.getChildren().remove(laser)));
+            remove.play();
+        }));
+        warn.play();
     }
 
     private boolean playerColidesWithLaser(Rectangle laser) {
