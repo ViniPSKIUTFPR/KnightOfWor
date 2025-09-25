@@ -19,6 +19,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
@@ -48,8 +49,6 @@ public class PlayFieldScreen extends Application {
 		}
 	}
 
-	private final static int START_X_PLAYER_1 = 130;
-	private final static int START_Y_PLAYER_1 = 510;
 	private final Timeline timeline = new Timeline();
 	private final List<Enemy> enemyList = new ArrayList<Enemy>();
 	private final List<Bullet> bulletList = new ArrayList<Bullet>();
@@ -137,26 +136,30 @@ public class PlayFieldScreen extends Application {
 			System.err.println("Musikdatei 'KoWLong.mp3' nicht gefunden!");
 		}
 		maze = new Maze("level1");
-		player = new Player(maze, START_X_PLAYER_1, START_Y_PLAYER_1);
-		player.setShootCallback(new ShootCallbackImpl());
 
+		player = new Player(maze);
+		player.setShootCallback(new ShootCallbackImpl());
 
 		createEnemy(TypeOfFigure.BURWOR, 130, 130);
 		createEnemy(TypeOfFigure.GARWOR, 855, 510);
 		createEnemy(TypeOfFigure.THORWOR, 855, 130);
 		createEnemy(TypeOfFigure.WIZARD, 500, 300);
 
-		Label score = new Label("Score: " + player.getScore());
+		// Seta a lista de inimigos no objeto de cada inimigo. Caso um projetil do inimigo seja rebatido pelo jogador, os inimigos se tornarão o target daquele projetil
+		for (Enemy e : enemyList) {
+			e.setInimigos(enemyList);
+		}
 		
-		Label lives = new Label("Leben: " + player.getLives());
-		lives.setLayoutY(40);
+		Label score = new Label("Score: " + player.getScore());
+
+		player.setRoot(root);
 		
 		Keyboard keyboard = new Keyboard(player, this);
 
 		root.getChildren().add(player.getGroup());
 		root.getChildren().addAll(maze.getWalls());
 		root.getChildren().add(score);
-		root.getChildren().add(lives);
+		root.getChildren().add(player.getLivesLabel());
 
 		timeline.setCycleCount(Timeline.INDEFINITE);
 		timeline.setAutoReverse(false);
@@ -192,23 +195,21 @@ public class PlayFieldScreen extends Application {
 						
 					}else{
 						timeline.pause();
-						player.getRectangle().setX(START_X_PLAYER_1);
-						player.getRectangle().setY(START_Y_PLAYER_1);
-						player.getImageView().setX(START_X_PLAYER_1);
-						player.getImageView().setY(START_Y_PLAYER_1);
 						player.setLives(player.getLives() - 1);
-						lives.setText("Leben: " + player.getLives());
 						player.setInvincible(true);
 						player.setAlive(true);
 						timeline.play();
 						Timer timer = new Timer();
-						
+						ColorAdjust sombra = new ColorAdjust();
+						sombra.setBrightness(-0.7);
+						player.getImageView().setEffect(sombra);
 						timer.schedule(new TimerTask(){
 
 							@Override
 							public void run() {
 								Platform.runLater(() -> {
 									player.setInvincible(false);
+									player.getImageView().setEffect(null);
 								});
 								
 							}
@@ -441,5 +442,9 @@ public class PlayFieldScreen extends Application {
 			)
 		);
 		fade.play();
-		}
+	}
+
+	public Group getRoot() {
+		return root;
+	}
 }

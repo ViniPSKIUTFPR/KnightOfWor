@@ -37,6 +37,7 @@ public class TitleScreen extends Application {
 		if (pathToTitleMusic != null) {
 			Media sound = new Media(pathToTitleMusic.toString());
 			player = new MediaPlayer(sound);
+			player.setVolume(0.5);
 			player.play();
 		} else {
 			System.err.println("Musikdatei 'menu.mp3' wurde nicht gefunden!");

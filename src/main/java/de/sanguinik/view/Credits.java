@@ -8,12 +8,22 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
 
 public class Credits extends Application {
 
+	private MediaPlayer player;
+
 	@Override
 	public void start(final Stage primaryStage) {
+
+		Media sound = new Media(getClass().getResource("KoW.mp3").toString());
+		player = new MediaPlayer(sound);
+		player.setVolume(0.5);
+		player.play();
+		
 		primaryStage.setTitle("Knight of Wor - Credits");
 		primaryStage.setResizable(false);
 

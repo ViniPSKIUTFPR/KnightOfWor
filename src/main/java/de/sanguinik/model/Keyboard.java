@@ -8,7 +8,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.util.Duration;
-
 public class Keyboard implements EventHandler<KeyEvent> {
 
 	private final Player player;
@@ -58,6 +57,9 @@ public class Keyboard implements EventHandler<KeyEvent> {
 		KeyCode code = e.getCode();
 		if (e.getEventType() == KeyEvent.KEY_PRESSED) {
 			switch (code) {
+				case CONTROL:
+					Parry.play(screen.getRoot(), player);
+					break;
 				case UP:
 				case W:
 					if (!upPressed) {

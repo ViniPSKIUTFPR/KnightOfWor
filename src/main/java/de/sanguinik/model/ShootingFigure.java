@@ -10,6 +10,9 @@ public abstract class ShootingFigure extends Figure {
 
 	private boolean hasBullet;
 	private AudioClip sound;
+	private boolean invincible = false;
+	private boolean bloqueando = false;
+	private final List<Enemy> enemyList = new ArrayList<Enemy>();
 
 	private ShootCallback shootCallback;
 
@@ -35,6 +38,7 @@ public abstract class ShootingFigure extends Figure {
 			Bullet bullet = new Bullet(getMaze(), getDirection(), x, y, this);
 
 			bullet.setTargets(targets);
+			bullet.setInimigos(enemyList);
 
 			if (shootCallback != null) {
 				shootCallback.shootBullet(bullet);
@@ -64,8 +68,31 @@ public abstract class ShootingFigure extends Figure {
 		}
 	}
 
+	public void setInimigos(List<Enemy> inimigos) {
+		for (Enemy inimigo : inimigos) {
+			this.enemyList.add(inimigo);
+		}
+	}
+
 	public void bulletHasHitTheMaze() {
 		hasBullet = false;
+	}
+
+	public void setInvincible(boolean isInvincible){
+		invincible = isInvincible;
+	}
+	
+	public boolean isInvincible(){
+		return invincible;
+	}
+
+	public void setBloqueando(boolean isBloqueando){
+		bloqueando = isBloqueando;
+		setInvincible(bloqueando);
+	}
+	
+	public boolean isBloqueando(){
+		return bloqueando;
 	}
 
 	/**

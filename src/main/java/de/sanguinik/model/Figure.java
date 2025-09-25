@@ -2,6 +2,7 @@ package de.sanguinik.model;
 
 import javafx.scene.Group;
 import javafx.scene.image.ImageView;
+import javafx.scene.media.AudioClip;
 import javafx.scene.shape.Rectangle;
 
 public abstract class Figure {
@@ -16,6 +17,7 @@ public abstract class Figure {
 	private final Group group;
 	private final Rectangle rectangle;
 	private final ImageView imageView;
+	public Group root;
 
 	protected final CollisionDetector cd = new CollisionDetector();
 
@@ -161,4 +163,27 @@ public abstract class Figure {
 		return type;
 	}
 
+	public boolean isBloqueando(){
+		return false;
+	}
+
+	public void BloqueioAudioVisual(){
+		AudioClip parry = new AudioClip(Parry.class.getResource("/de/sanguinik/model/parry.mp3").toString());
+		parry.setVolume(0.1);
+		parry.play();
+		
+		ImageView view = getImageView();
+		double centerX = view.getX() + view.getFitWidth() / 2;
+        double centerY = view.getY() + view.getFitHeight() / 2;
+        Particulas.play(root, centerX, centerY);
+	}
+
+	public void setRoot(Group root) {
+		this.root = root;
+	}
+
+	public Group getRoot() {
+		return root;
+	}
+	
 }

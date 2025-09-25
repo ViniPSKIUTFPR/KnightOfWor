@@ -10,6 +10,7 @@ public class Bullet extends Figure {
 
 	private final List<Figure> targets = new ArrayList<Figure>();
 	private final static String PATH = "/de/sanguinik/model/";
+	private final List<Enemy> enemyList = new ArrayList<Enemy>();
 
 	private boolean active = true;
 
@@ -34,9 +35,15 @@ public class Bullet extends Figure {
 		getImageView().setY(y);
 	}
 
-	public void setTargets(final List<Figure> newTargets) {
+	public void setTargets(final List<? extends Figure> newTargets) {
 		targets.clear();
 		targets.addAll(newTargets);
+	}
+
+	public void setInimigos(List<Enemy> inimigos) {
+		for (Enemy inimigo : inimigos) {
+			this.enemyList.add(inimigo);
+		}
 	}
 
 	/**
@@ -51,12 +58,18 @@ public class Bullet extends Figure {
 		if (target == null) {
 			super.move();
 		} else {
-			// When a target was hit, the bullet has to stop the movement.
-
-			active = false;
-			shooter.bulletHasHitATarget(target);
+			if(target.isBloqueando()) {
+				// Projetil rebatido caso seja bloqueado
+				setTargets(enemyList);
+				setDirection(getDirection().oposto());
+				target.BloqueioAudioVisual();
+				super.move();
+			} else {
+				// When a target was hit, the bullet has to stop the movement.
+				active = false;
+				shooter.bulletHasHitATarget(target);
+			}
 		}
-
 	}
 
 	private Figure checkForCollisionWithTargets() {
