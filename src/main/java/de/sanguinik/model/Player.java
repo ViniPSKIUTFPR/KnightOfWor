@@ -61,6 +61,12 @@ public class Player extends ShootingFigure {
 		}
 	}
 
+	public void loseLife() {
+		if (lives > 0) {
+			setLives(lives - 1);
+		}
+	}
+
 	public int getMaxLives() {
 		return MAX_LIVES;
 	}

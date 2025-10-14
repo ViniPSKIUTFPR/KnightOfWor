@@ -195,7 +195,7 @@ public class PlayFieldScreen extends Application {
 						
 					}else{
 						timeline.pause();
-						player.setLives(player.getLives() - 1);
+						player.loseLife();
 						player.setInvincible(true);
 						player.setAlive(true);
 						timeline.play();
