@@ -15,27 +15,28 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 public class HighscoreScreen extends Application {
 
+	private static final int GRID_GAP = 30;
+	private static final int MIN_WIDTH = 150;
+	private static final int SCENE_WIDTH = 1024;
+	private static final int SCENE_HEIGHT = 740;
+	
 	@Override
 	public void start(final Stage primaryStage) {
 
-		primaryStage.setTitle("Knight of Wor - Highscore");
+		primaryStage.setTitle("Knight of Wor - Pontuação");
 		primaryStage.setResizable(false);
 
 		GridPane grid = new GridPane();
 		grid.setId("highscoreGrid");
 		grid.setAlignment(Pos.CENTER);
-		grid.setHgap(30);
-		grid.setVgap(30);
+		grid.setHgap(GRID_GAP);
+		grid.setVgap(GRID_GAP);
 		
-		final Label highscoreTitle = new Label("Highscore");
-//		highscoreTitle.setFont(new Font("Monospace", 48));
-//		highscoreTitle.setTextFill(Color.WHITE);
+		final Label highscoreTitle = new Label("Pontuação");
 		
 		String dummyname = "Horst";
 		int dummypoints = 9000;
@@ -51,14 +52,14 @@ public class HighscoreScreen extends Application {
 		
 		highscoreTable.setId("highscoreTable");
 		
-		TableColumn nameCol = new TableColumn("Name");
-		nameCol.setMinWidth(150);
+		TableColumn nameCol = new TableColumn("Jogador");
+		nameCol.setMinWidth(MIN_WIDTH);
 		nameCol.setCellValueFactory(new PropertyValueFactory<HighscoreEntry, String>("name"));
 		nameCol.setSortable(false);
 		nameCol.setResizable(false);
 
-		TableColumn scoreCol = new TableColumn("Punkte");
-		scoreCol.setMinWidth(150);
+		TableColumn scoreCol = new TableColumn("Pontos");
+		scoreCol.setMinWidth(MIN_WIDTH);
 		scoreCol.setCellValueFactory(new PropertyValueFactory<HighscoreEntry, Integer>("score"));
 		scoreCol.setSortable(false);
 		scoreCol.setResizable(false);
@@ -67,7 +68,7 @@ public class HighscoreScreen extends Application {
 		highscoreTable.getColumns().addAll(nameCol, scoreCol);
 		
 		Button okBtn = new Button();
-		okBtn.setText("Zurück");
+		okBtn.setText("Voltar");
 		okBtn.setAlignment(Pos.CENTER);
 		okBtn.setOnAction(new EventHandler<ActionEvent>() {
 
@@ -84,7 +85,7 @@ public class HighscoreScreen extends Application {
 		grid.add(okBtn,0,2);
 		StackPane root = new StackPane();
 		root.getChildren().add(grid);
-		Scene scene = new Scene(root, 1024, 740);
+		Scene scene = new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);
 		scene.getStylesheets().add(TitleScreen.class.getResource("controls.css").toExternalForm());
 		scene.getStylesheets().add(
 				Credits.class.getResource("HighscoreScreen.css").toExternalForm());

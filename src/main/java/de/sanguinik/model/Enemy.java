@@ -21,14 +21,13 @@ public class Enemy extends ShootingFigure {
 	private static final Image WORLUK_IMAGE = new Image(PACKAGE_PATH
 			+ "WORLUK.png");
 
-	public Enemy(final Maze maze, final TypeOfFigure type, final double x,
-			final double y) {
-		this(maze, type, x, y, null, null, null);
+	public Enemy(final Maze maze, final Target target) {
+		this(maze, target, null, null, null);
 	}
 
 	// Construtor para o wizard que chama o contrutor geral
-	public Enemy(final Maze maze, final TypeOfFigure type, final double x, final double y, Group root, Player player) {
-		this(maze, type, x, y, root, player, null);
+	public Enemy(final Maze maze, final Target target, Group root, Player player) {
+		this(maze, target, root, player, null);
 	}
 	public void stopWizardAttack() {
 		if (wizardAttack != null) wizardAttack.stop();
@@ -37,13 +36,12 @@ public class Enemy extends ShootingFigure {
 		if (wizardAttack != null) wizardAttack.start();
 	}
 	
-	private Enemy(final Maze maze, final TypeOfFigure type, final double x,
-			final double y, Group root, Player player, Object unused) {
-		super(maze, type, x, y);
-		setImageByMonster(type);
-		getImageView().setX(x);
-		getImageView().setY(y);
-		if (type == TypeOfFigure.WIZARD && root != null && player != null) {
+	private Enemy(final Maze maze, final Target target, Group root, Player player, Object unused) {
+		super(maze, target);
+		setImageByMonster(target.getTypeOfFigure());
+		getImageView().setX(target.getPosition().getX());
+		getImageView().setY(target.getPosition().getY());
+		if (target.getTypeOfFigure() == TypeOfFigure.WIZARD && root != null && player != null) {
 			wizardAttack = new WizardAttack(root, player, maze);
 			wizardAttack.start();
 		}
@@ -74,7 +72,6 @@ public class Enemy extends ShootingFigure {
 			break;
 		}
 	}
-
 
 	@Override
 	public void onCollisionWithMaze() {

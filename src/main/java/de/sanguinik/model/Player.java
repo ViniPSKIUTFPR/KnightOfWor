@@ -1,6 +1,7 @@
 package de.sanguinik.model;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
+
 public class Player extends ShootingFigure {
 
 	private int score = 0;
@@ -8,17 +9,16 @@ public class Player extends ShootingFigure {
 	private static final int MAX_LIVES = 4;
 	private static final String PATH = "/de/sanguinik/model/";
 	private boolean isAllowedToMove = false;
-	private final static int START_X_PLAYER_1 = 130;
-	private final static int START_Y_PLAYER_1 = 510;
+	private final static Position START_POSITION_PLAYER_1 = new Position(130, 510);
 	public Label livesLabel;
 
 	public Player(final Maze maze) {
-		super(maze, TypeOfFigure.PLAYER, START_X_PLAYER_1, START_Y_PLAYER_1);
+		super(maze, new Target(TypeOfFigure.PLAYER, new Position(START_POSITION_PLAYER_1.getX(), START_POSITION_PLAYER_1.getY())));
 		Image image = new Image(
 				PATH + "hannes_right.png");
 		getImageView().setImage(image);
-		getImageView().setX(START_X_PLAYER_1);
-		getImageView().setY(START_Y_PLAYER_1);
+		getImageView().setX(START_POSITION_PLAYER_1.getX());
+		getImageView().setY(START_POSITION_PLAYER_1.getY());
 		lives = 4;
 		livesLabel = new Label("Leben: " + lives);
 		livesLabel.setLayoutY(40);
@@ -42,10 +42,10 @@ public class Player extends ShootingFigure {
 		if (!alive) {
 			if (isBloqueando()) BloqueioAudioVisual();
 			if (isInvincible()) return;
-			this.getRectangle().setX(START_X_PLAYER_1);
-			this.getRectangle().setY(START_Y_PLAYER_1);
-			this.getImageView().setX(START_X_PLAYER_1);
-			this.getImageView().setY(START_Y_PLAYER_1);
+			this.getRectangle().setX(START_POSITION_PLAYER_1.getX());
+			this.getRectangle().setY(START_POSITION_PLAYER_1.getY());
+			this.getImageView().setX(START_POSITION_PLAYER_1.getX());
+			this.getImageView().setY(START_POSITION_PLAYER_1.getY());
 		}
 		super.setAlive(alive);
 	}

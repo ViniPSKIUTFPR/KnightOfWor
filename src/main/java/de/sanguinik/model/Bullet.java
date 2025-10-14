@@ -16,9 +16,8 @@ public class Bullet extends Figure {
 
 	private final ShootingFigure shooter;
 
-	public Bullet(final Maze maze, final Direction direction, final double x,
-			final double y, final ShootingFigure shooter) {
-		super(maze, TypeOfFigure.BULLET, x, y);
+	public Bullet(final Maze maze, final Direction direction, Target target, final ShootingFigure shooter) {
+		super(maze, target);
 		setDirection(direction);
 		setDistance(6);
 		this.shooter = shooter;
@@ -31,8 +30,8 @@ public class Bullet extends Figure {
 		} else {
 			getImageView().setImage(enemyBullet);
 		}
-		getImageView().setX(x);
-		getImageView().setY(y);
+		getImageView().setX(target.getPosition().getX());
+		getImageView().setY(target.getPosition().getY());
 	}
 
 	public void setTargets(final List<? extends Figure> newTargets) {

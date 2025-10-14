@@ -25,11 +25,10 @@ public abstract class Figure {
 
 	private final TypeOfFigure type;
 
-	public Figure(final Maze maze, final TypeOfFigure type, final double x,
-			final double y) {
+	public Figure(final Maze maze, final Target target) {
 		this.maze = maze;
-		this.type = type;
-		rectangle = new Rectangle(x, y, WIDTH, HEIGHT);
+		this.type = target.getTypeOfFigure();
+		rectangle = new Rectangle(target.getPosition().getX(), target.getPosition().getY(), WIDTH, HEIGHT);
 		imageView = new ImageView();
 		group = new Group();
 		group.getChildren().add(rectangle);
@@ -173,9 +172,8 @@ public abstract class Figure {
 		parry.play();
 		
 		ImageView view = getImageView();
-		double centerX = view.getX() + view.getFitWidth() / 2;
-        double centerY = view.getY() + view.getFitHeight() / 2;
-        Particulas.play(root, centerX, centerY);
+		Position position = new Position((view.getX() + view.getFitWidth() / 2), (view.getY() + view.getFitHeight() / 2));
+        Particulas.play(root, position);
 	}
 
 	public void setRoot(Group root) {

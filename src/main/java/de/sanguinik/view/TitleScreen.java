@@ -13,15 +13,12 @@ import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
 
-/**
- * 
- * @author marlene
- * 
- */
-
 public class TitleScreen extends Application {
 
 	private static final double BUTTON_SIZE = 120.0;
+	private static final int GRID_GAP = 30;
+	private static final int SCENE_WIDTH = 1024;
+	private static final int SCENE_HEIGHT = 740;
 	private MediaPlayer player;
 
 	public static void main(final String[] args) {
@@ -42,103 +39,75 @@ public class TitleScreen extends Application {
 		} else {
 			System.err.println("Musikdatei 'menu.mp3' wurde nicht gefunden!");
 		}
+
 		GridPane grid = new GridPane();
 		grid.setId("titleGrid");
 		grid.setAlignment(Pos.CENTER);
-		grid.setHgap(30);
-		grid.setVgap(30);
+		grid.setHgap(GRID_GAP);
+		grid.setVgap(GRID_GAP);
 
-		Button newGame = new Button();
-		newGame.setText("Neues Spiel");
-		newGame.setPrefWidth(BUTTON_SIZE);
+		//#region Create Buttons
+		Button newGame = createButton("Novo Jogo", (final ActionEvent arg) -> {
+			if (player != null) {
+				player.stop();
+			}
+			PlayFieldScreen psc = new PlayFieldScreen();
+			psc.start(primaryStage);
+		});
+
+		Button options = createButton("Opções", (final ActionEvent arg) -> {
+			if (player != null) {
+				player.stop();
+			}
+			Options optionsGUI = new Options();
+			optionsGUI.start(primaryStage);
+		});
+
+		Button highscore = createButton("Pontuação", (final ActionEvent arg) -> {
+			if (player != null) {
+				player.stop();
+			}
+			HighscoreScreen highscoreScreen = new HighscoreScreen();
+			highscoreScreen.start(primaryStage);
+		});
+
+		Button about = createButton("Créditos", (final ActionEvent arg) -> {
+			if (player != null) {
+				player.stop();
+			}
+			Credits credits = new Credits();
+			credits.start(primaryStage);
+		});
+
+		Button close = createButton("Sair", (final ActionEvent arg) -> {
+			if (player != null) {
+				player.stop();
+			}
+			System.exit(0);
+		});
+		//#endregion
+
 		grid.add(newGame, 0, 0);
-
-		newGame.setOnAction(new EventHandler<ActionEvent>() {
-
-			@Override
-			public void handle(final ActionEvent arg0) {
-				if (player != null) {
-					player.stop();
-				}
-				PlayFieldScreen psc = new PlayFieldScreen();
-				psc.start(primaryStage);
-			}
-
-		});
-
-		Button options = new Button();
-		options.setText("Optionen");
-		options.setPrefWidth(BUTTON_SIZE);
 		grid.add(options, 0, 1);
-
-		options.setOnAction(new EventHandler<ActionEvent>() {
-
-			@Override
-			public void handle(final ActionEvent arg0) {
-				if (player != null) {
-					player.stop();
-				}
-				Options optionsGUI = new Options();
-				optionsGUI.start(primaryStage);
-			}
-		});
-
-		Button highscore = new Button();
-		highscore.setText("Highscore");
-		highscore.setPrefWidth(BUTTON_SIZE);
 		grid.add(highscore, 0, 2);
-
-		highscore.setOnAction(new EventHandler<ActionEvent>() {
-
-			@Override
-			public void handle(final ActionEvent arg0) {
-				if (player != null) {
-					player.stop();
-				}
-				HighscoreScreen highscoreScreen = new HighscoreScreen();
-				highscoreScreen.start(primaryStage);
-			}
-
-		});
-
-		Button about = new Button();
-		about.setText("Credits");
-		about.setPrefWidth(BUTTON_SIZE);
 		grid.add(about, 0, 3);
-
-		about.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(final ActionEvent event) {
-				if (player != null) {
-					player.stop();
-				}
-				Credits credits = new Credits();
-				credits.start(primaryStage);
-			}
-		});
-
-		Button close = new Button();
-		close.setText("Beenden");
-		close.setPrefWidth(BUTTON_SIZE);
 		grid.add(close, 0, 4);
 
-		close.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(final ActionEvent event) {
-				if (player != null) {
-					player.stop();
-				}
-				System.exit(0);
-			}
-		});
-
-		Scene scene = new Scene(grid, 1024, 740);
+		Scene scene = new Scene(grid, SCENE_WIDTH, SCENE_HEIGHT);
 		scene.getStylesheets().add(TitleScreen.class.getResource("controls.css").toExternalForm());
 		scene.getStylesheets().add(
 				TitleScreen.class.getResource("TitleScreen.css")
 						.toExternalForm());
 		primaryStage.setScene(scene);
 		primaryStage.show();
+	}
+
+	private Button createButton(String text, EventHandler<ActionEvent> handler) {
+		Button button = new Button();
+		button.setText(text);
+		button.setPrefWidth(BUTTON_SIZE);
+		button.setOnAction(handler);
+		return button;
 	}
 
 }

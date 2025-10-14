@@ -18,9 +18,8 @@ public abstract class ShootingFigure extends Figure {
 
 	private final List<Figure> targets = new ArrayList<Figure>();
 
-	public ShootingFigure(final Maze maze, final TypeOfFigure type,
-			final double x, final double y) {
-		super(maze, type, x, y);
+	public ShootingFigure(final Maze maze, final Target target) {
+		super(maze, target);
 	}
 
 	public void shoot() {
@@ -32,10 +31,10 @@ public abstract class ShootingFigure extends Figure {
 		if (!hasBullet) {
 			hasBullet = true;
 
-			double x = getRectangle().getX();
-			double y = getRectangle().getY();
-
-			Bullet bullet = new Bullet(getMaze(), getDirection(), x, y, this);
+			Position position = new Position(getRectangle().getX(), getRectangle().getY());
+			
+			Target target = new Target(TypeOfFigure.BULLET, position);
+			Bullet bullet = new Bullet(getMaze(), getDirection(), target, this);
 
 			bullet.setTargets(targets);
 			bullet.setInimigos(enemyList);

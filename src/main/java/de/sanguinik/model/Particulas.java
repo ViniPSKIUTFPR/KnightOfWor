@@ -14,13 +14,13 @@ public class Particulas {
     private static final double MAX_DISTANCE = 100; // distância máxima que cada particula vai
     private static final double LIFETIME = 0.6;    // duração em segundos da animacao
 
-    public static void play(Group root, double centerX, double centerY) {
+    public static void play(Group root, Position centerPosition) {
         Random rnd = new Random();
 
         for (int i = 0; i < NUM_PARTICLES; i++) {
             Circle particle = new Circle(PARTICLE_SIZE, Color.YELLOW);
-            particle.setTranslateX(centerX);
-            particle.setTranslateY(centerY);
+            particle.setTranslateX(centerPosition.getX());
+            particle.setTranslateY(centerPosition.getY());
             root.getChildren().add(particle);
 
             // direção aleatória

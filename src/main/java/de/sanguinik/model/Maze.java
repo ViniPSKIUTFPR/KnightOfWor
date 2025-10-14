@@ -36,7 +36,7 @@ public class Maze{
 		
 	}
 
-private void createMaze(String levelName) {
+	private void createMaze(String levelName) {
 		
 		double[][] values = loadJSON(levelName);
 		

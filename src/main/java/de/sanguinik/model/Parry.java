@@ -55,15 +55,14 @@ public class Parry {
 
         double width = targetView.getFitWidth();
         double height = targetView.getFitHeight();
-        double centerX = targetView.getX() + width / 2;
-        double centerY = targetView.getY() + height / 2;
+        Position centerPosition = new Position((targetView.getX() + width / 2), (targetView.getY() + height / 2));
 
         Image noteImg = new Image(Parry.class.getResource(NOTE_PATH).toString());
         ImageView noteView = new ImageView(noteImg);
         noteView.setFitWidth(TAMANHO);
         noteView.setFitHeight(TAMANHO);
-        noteView.setX(centerX + width / 2);
-        noteView.setY(centerY + height / 2);
+        noteView.setX(centerPosition.getX() + width / 2);
+        noteView.setY(centerPosition.getY() + height / 2);
 
         root.getChildren().add(noteView);
 

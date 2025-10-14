@@ -10,8 +10,6 @@ import javafx.util.Duration;
 import java.util.Random;
 import java.util.List;
 
-
-
 public class WizardAttack {
     private final Group root;
     private final Player player;
@@ -21,7 +19,8 @@ public class WizardAttack {
     private final int warningMillis = 500; // tempo de aviso em ms
     private final int activeMillis = 300;  // tempo de ataque ativo em ms
     private int cellSize = 32; // grid imaginário
-    private int minX, minY, maxX, maxY, gridCols, gridRows;
+    private int gridCols, gridRows;
+    private Position minPosition, maxPosition;
     private static AudioClip blastSound;
 
 
@@ -49,15 +48,21 @@ public class WizardAttack {
         // Calcula a área jogável com base nas paredes do Maze
         List<Rectangle> walls = maze.getWalls();
         if (walls.isEmpty()) {
-            minX = 0; minY = 0; maxX = 1024; maxY = 740; // fallback para tela padrão
+            // fallback para tela padrão
+            minPosition = new Position(0, 0);
+            maxPosition = new Position(1024, 740);
         } else {
-            minX = (int) walls.stream().mapToDouble(r -> r.getX()).min().orElse(0);
-            minY = (int) walls.stream().mapToDouble(r -> r.getY()).min().orElse(0);
-            maxX = (int) walls.stream().mapToDouble(r -> r.getX() + r.getWidth()).max().orElse(1024);
-            maxY = (int) walls.stream().mapToDouble(r -> r.getY() + r.getHeight()).max().orElse(740);
+            minPosition = new Position(
+                    (int) walls.stream().mapToDouble(r -> r.getX()).min().orElse(0),
+                    (int) walls.stream().mapToDouble(r -> r.getY()).min().orElse(0)
+            );
+            maxPosition = new Position(
+                    (int) walls.stream().mapToDouble(r -> r.getX() + r.getWidth()).max().orElse(1024),
+                    (int) walls.stream().mapToDouble(r -> r.getY() + r.getHeight()).max().orElse(740)
+            );
         }
-        gridCols = (maxX - minX) / cellSize;
-        gridRows = (maxY - minY) / cellSize;
+        gridCols = (int) (maxPosition.getX() - minPosition.getX()) / cellSize;
+        gridRows = (int) (maxPosition.getY() - minPosition.getY()) / cellSize;
     }
 
     public void start() {
@@ -75,13 +80,13 @@ public class WizardAttack {
 
         if (isVertical && gridCols > 0) {
             int col = random.nextInt(gridCols);
-            int x = minX + col * cellSize;
-            final Rectangle laser = new Rectangle(x, minY, cellSize, maxY - minY);
+            int x = (int) minPosition.getX() + col * cellSize;
+            final Rectangle laser = new Rectangle(x, minPosition.getY(), cellSize, maxPosition.getY() - minPosition.getY());
             handleLaserAttack(laser);
         } else if (!isVertical && gridRows > 0) {
             int row = random.nextInt(gridRows);
-            int y = minY + row * cellSize;
-            final Rectangle laser = new Rectangle(minX, y, maxX - minX, cellSize);
+            int y = (int) minPosition.getY() + row * cellSize;
+            final Rectangle laser = new Rectangle(minPosition.getX(), y, maxPosition.getX() - minPosition.getX(), cellSize);
             handleLaserAttack(laser);
         }
     }

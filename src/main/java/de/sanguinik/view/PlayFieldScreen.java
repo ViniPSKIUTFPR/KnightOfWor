@@ -24,20 +24,19 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.util.Duration;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import javafx.util.Duration;
 import de.sanguinik.model.Bullet;
 import de.sanguinik.model.Enemy;
 import de.sanguinik.model.HighscoreEntry;
 import de.sanguinik.model.Keyboard;
 import de.sanguinik.model.Maze;
 import de.sanguinik.model.Player;
+import de.sanguinik.model.Position;
 import de.sanguinik.model.ShootCallback;
+import de.sanguinik.model.Target;
 import de.sanguinik.model.TypeOfFigure;
 public class PlayFieldScreen extends Application {
 
@@ -77,12 +76,12 @@ public class PlayFieldScreen extends Application {
 	private Stage primaryStage;
 
 
-	private Enemy createEnemy(final TypeOfFigure enemyType, final int x, final int y) {
+	private Enemy createEnemy(final Target target) {
 		Enemy enemy;
-		if (enemyType == TypeOfFigure.WIZARD) {
-			enemy = new Enemy(maze, enemyType, x, y, root, player);
+		if (target.getTypeOfFigure() == TypeOfFigure.WIZARD) {
+			enemy = new Enemy(maze, target, root, player);
 		} else {
-			enemy = new Enemy(maze, enemyType, x, y);
+			enemy = new Enemy(maze, target);
 		}
 		
 		enemy.addTargets(player);
@@ -140,10 +139,10 @@ public class PlayFieldScreen extends Application {
 		player = new Player(maze);
 		player.setShootCallback(new ShootCallbackImpl());
 
-		createEnemy(TypeOfFigure.BURWOR, 130, 130);
-		createEnemy(TypeOfFigure.GARWOR, 855, 510);
-		createEnemy(TypeOfFigure.THORWOR, 855, 130);
-		createEnemy(TypeOfFigure.WIZARD, 500, 300);
+		createEnemy(new Target(TypeOfFigure.BURWOR, new Position(130, 130)));
+		createEnemy(new Target(TypeOfFigure.GARWOR, new Position(855, 510)));
+		createEnemy(new Target(TypeOfFigure.THORWOR, new Position(855, 130)));
+		createEnemy(new Target(TypeOfFigure.WIZARD, new Position(500, 300)));
 
 		// Seta a lista de inimigos no objeto de cada inimigo. Caso um projetil do inimigo seja rebatido pelo jogador, os inimigos se tornarão o target daquele projetil
 		for (Enemy e : enemyList) {

@@ -8,7 +8,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 public class Options extends Application {
@@ -41,7 +40,7 @@ public class Options extends Application {
 		root.add(configuration,0,3);
 		
 		Button okBtn = new Button();
-		okBtn.setText("Zurück");
+		okBtn.setText("Voltar");
 		okBtn.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
