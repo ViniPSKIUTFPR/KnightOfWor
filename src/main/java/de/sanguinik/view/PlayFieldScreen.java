@@ -1,11 +1,18 @@
 package de.sanguinik.view;
 
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -30,7 +37,7 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import de.sanguinik.model.Bullet;
 import de.sanguinik.model.Enemy;
-import de.sanguinik.model.HighscoreEntry;
+import de.sanguinik.model.HighscoreModel;
 import de.sanguinik.model.Keyboard;
 import de.sanguinik.model.Maze;
 import de.sanguinik.model.Player;
@@ -38,6 +45,7 @@ import de.sanguinik.model.Position;
 import de.sanguinik.model.ShootCallback;
 import de.sanguinik.model.Target;
 import de.sanguinik.model.TypeOfFigure;
+import de.sanguinik.persistence.HighscoreImpl;
 public class PlayFieldScreen extends Application {
 
 	private class ShootCallbackImpl implements ShootCallback {
@@ -57,7 +65,7 @@ public class PlayFieldScreen extends Application {
 	private boolean gameWasPaused = true;
 	private final Label pause = new Label("PAUSE");
 	
-	private HighscoreEntry entry;
+	private HighscoreModel entry;
 
 	private Media music;
 	private MediaPlayer mediaPlayer1;
@@ -75,6 +83,41 @@ public class PlayFieldScreen extends Application {
 
 	private Stage primaryStage;
 
+	private void loadEnemy(String level){
+		JSONParser parser = new JSONParser();
+		try {
+			Object obj = parser.parse(new FileReader("./src/main/resources/de/sanguinik/model/"+level+".json"));
+			JSONObject jsonObject = (JSONObject) obj;
+
+			JSONObject enemys = (JSONObject) jsonObject.get("Enemys");
+			
+			for(int i = 1; i <= enemys.size(); i++){
+				JSONObject enemy = (JSONObject) enemys.get("Enemy"+i);
+				
+				long type = (Long) enemy.get("type");
+				TypeOfFigure typeOfFigure = TypeOfFigure.BURWOR;
+				if(type == 1){
+					typeOfFigure = TypeOfFigure.BURWOR;
+				}else if(type == 2){
+					typeOfFigure = TypeOfFigure.GARWOR;
+				}else if(type == 3){
+					typeOfFigure = TypeOfFigure.THORWOR;
+				}else if(type == 4){
+					typeOfFigure = TypeOfFigure.WIZARD;
+				}
+				
+				Position positionStart = new Position((double) enemy.get("x"),(double) enemy.get("y"));
+
+				long quantity = (Long) enemy.get("quantity");
+				
+				for(int j = 0; j < quantity; j++){
+					createEnemy(new Target(typeOfFigure, positionStart));
+				}
+			}
+		} catch (IOException | ParseException e){
+			e.printStackTrace();
+		}
+	}
 
 	private Enemy createEnemy(final Target target) {
 		Enemy enemy;
@@ -112,7 +155,7 @@ public class PlayFieldScreen extends Application {
 			mediaPlayer1.setVolume(1.0);
 			mediaPlayer2.setVolume(0.0);
 
-			// Duração do crossfade em segundos 
+			// DuraÃ§Ã£o do crossfade em segundos 
 			final double crossfadeDuration = 0.2;
 
 			mediaPlayer1.currentTimeProperty().addListener((obs, oldTime, newTime) -> {
@@ -139,12 +182,9 @@ public class PlayFieldScreen extends Application {
 		player = new Player(maze);
 		player.setShootCallback(new ShootCallbackImpl());
 
-		createEnemy(new Target(TypeOfFigure.BURWOR, new Position(130, 130)));
-		createEnemy(new Target(TypeOfFigure.GARWOR, new Position(855, 510)));
-		createEnemy(new Target(TypeOfFigure.THORWOR, new Position(855, 130)));
-		createEnemy(new Target(TypeOfFigure.WIZARD, new Position(500, 300)));
+		loadEnemy("level1");
 
-		// Seta a lista de inimigos no objeto de cada inimigo. Caso um projetil do inimigo seja rebatido pelo jogador, os inimigos se tornarão o target daquele projetil
+		// Seta a lista de inimigos no objeto de cada inimigo. Caso um projetil do inimigo seja rebatido pelo jogador, os inimigos se tornarÃ£o o target daquele projetil
 		for (Enemy e : enemyList) {
 			e.setInimigos(enemyList);
 		}
@@ -162,8 +202,6 @@ public class PlayFieldScreen extends Application {
 
 		timeline.setCycleCount(Timeline.INDEFINITE);
 		timeline.setAutoReverse(false);
-
-		
 		
 		EventHandler<ActionEvent> actionPerFrame = new EventHandler<ActionEvent>() {
 
@@ -172,7 +210,7 @@ public class PlayFieldScreen extends Application {
 				
 				introSequence();
 
-				// Checa colisão player-inimigo
+				// Checa colisÃ£o player-inimigo
 				for (Enemy enemy : enemyList) {
 					if (enemy.isAlive() && player.isAlive() && !player.isInvincible() &&
 						player.getRectangle().getBoundsInParent().intersects(enemy.getRectangle().getBoundsInParent())) {
@@ -262,17 +300,17 @@ public class PlayFieldScreen extends Application {
 		if (currentPlayer != null) {
 			currentPlayer.stop();
 		}
+		
 		timeline.stop();
 		for (Enemy e : enemyList) {
 			if (e.getType() == TypeOfFigure.WIZARD) e.stopWizardAttack();
 		}
-		int finalScore = player.getScore();
-		String playerName = "Spieler 1";
-		Label playersPoints = new Label("Du hast "+finalScore+ " Punkte!");
+
+		Label playersPoints = new Label("Voce fez " + player.getScore() + " pontos!");
 		playersPoints.setTextFill(Color.WHITESMOKE);
-		Label enterHighscore = new Label("Trage deinen Namen ein! ");
+		Label enterHighscore = new Label("Digite seu nome! ");
 		enterHighscore.setTextFill(Color.WHITESMOKE);
-		TextField name = new TextField(playerName);
+		TextField name = new TextField("Jogador 1");
 		Button ok = new Button("Ok");
 		VBox highscorePopup = new VBox();
 		highscorePopup.setAlignment(Pos.CENTER);
@@ -289,10 +327,9 @@ public class PlayFieldScreen extends Application {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				//highscore eintragen
-				entry = new HighscoreEntry(name.getText(), finalScore);
-            
-				//gameover
+				HighscoreImpl highscore = new HighscoreImpl();
+				entry = new HighscoreModel(name.getText(), player.getScore(), new Date());
+				highscore.saveHighscore(entry);
 				gameOver();
 			}
 		});

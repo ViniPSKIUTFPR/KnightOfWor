@@ -98,6 +98,12 @@ public class Enemy extends ShootingFigure {
 				changeToRandomDirection();
 			}
 			super.move();
+
+			double speed = Math.max(0.0, getType().getSpeed());
+			int whole = (int) Math.floor(speed);
+			for (int k = 0; k < whole; k++) {
+				super.move();
+			}
 		}
 
 	}

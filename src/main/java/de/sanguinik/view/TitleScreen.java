@@ -55,7 +55,7 @@ public class TitleScreen extends Application {
 			psc.start(primaryStage);
 		});
 
-		Button options = createButton("Opções", (final ActionEvent arg) -> {
+		Button options = createButton("Opcoes", (final ActionEvent arg) -> {
 			if (player != null) {
 				player.stop();
 			}
@@ -63,7 +63,7 @@ public class TitleScreen extends Application {
 			optionsGUI.start(primaryStage);
 		});
 
-		Button highscore = createButton("Pontuação", (final ActionEvent arg) -> {
+		Button highscore = createButton("Pontuacao", (final ActionEvent arg) -> {
 			if (player != null) {
 				player.stop();
 			}
@@ -71,7 +71,7 @@ public class TitleScreen extends Application {
 			highscoreScreen.start(primaryStage);
 		});
 
-		Button about = createButton("Créditos", (final ActionEvent arg) -> {
+		Button about = createButton("Creditos", (final ActionEvent arg) -> {
 			if (player != null) {
 				player.stop();
 			}

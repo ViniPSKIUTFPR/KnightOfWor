@@ -33,7 +33,6 @@ public class Maze{
 
 	public Maze(String levelName) {
 		createMaze(levelName);
-		
 	}
 
 	private void createMaze(String levelName) {
@@ -71,11 +70,12 @@ public class Maze{
 			
 			Object obj = parser.parse(new FileReader("./src/main/resources/de/sanguinik/model/"+levelName+".json"));
 			JSONObject jsonObject = (JSONObject) obj;
+			JSONObject walls = (JSONObject) jsonObject.get("walls");
 
-			double[][] blockValues = new double[jsonObject.size()][4];
+			double[][] blockValues = new double[walls.size()][4];
 			
-			for(int i = 1; i <= jsonObject.size(); i++){
-				JSONObject block = (JSONObject) jsonObject.get("Block"+i);
+			for(int i = 1; i <= walls.size(); i++){
+				JSONObject block = (JSONObject) walls.get("Block"+i);
 				
 				long x = (Long) block.get("x");
 				blockValues[i-1][0] = (double) x;

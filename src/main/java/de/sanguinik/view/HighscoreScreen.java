@@ -1,6 +1,9 @@
 package de.sanguinik.view;
 
-import de.sanguinik.model.HighscoreEntry;
+import java.util.List;
+
+import de.sanguinik.model.HighscoreModel;
+import de.sanguinik.persistence.HighscoreImpl;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -27,7 +30,7 @@ public class HighscoreScreen extends Application {
 	@Override
 	public void start(final Stage primaryStage) {
 
-		primaryStage.setTitle("Knight of Wor - Pontuação");
+		primaryStage.setTitle("Knight of Wor - Pontuacao");
 		primaryStage.setResizable(false);
 
 		GridPane grid = new GridPane();
@@ -36,17 +39,13 @@ public class HighscoreScreen extends Application {
 		grid.setHgap(GRID_GAP);
 		grid.setVgap(GRID_GAP);
 		
-		final Label highscoreTitle = new Label("Pontuação");
+		final Label highscoreTitle = new Label("Pontuacao");
 		
-		String dummyname = "Horst";
-		int dummypoints = 9000;
-		String dummyname2 = "Klaus";
-		int dummypoints2 = 8300;
+		HighscoreImpl highscore = new HighscoreImpl();
+
+		List<HighscoreModel> scores = highscore.loadHighscore();
 		
-		final ObservableList<HighscoreEntry> dummyData = FXCollections.observableArrayList(
-				new HighscoreEntry(dummyname, dummypoints),
-				new HighscoreEntry(dummyname2, dummypoints2)
-				);
+		final ObservableList<HighscoreModel> dummyData = FXCollections.observableArrayList(scores);
 		
 		TableView highscoreTable = new TableView();
 		
@@ -54,13 +53,13 @@ public class HighscoreScreen extends Application {
 		
 		TableColumn nameCol = new TableColumn("Jogador");
 		nameCol.setMinWidth(MIN_WIDTH);
-		nameCol.setCellValueFactory(new PropertyValueFactory<HighscoreEntry, String>("name"));
+		nameCol.setCellValueFactory(new PropertyValueFactory<HighscoreModel, String>("name"));
 		nameCol.setSortable(false);
 		nameCol.setResizable(false);
 
 		TableColumn scoreCol = new TableColumn("Pontos");
 		scoreCol.setMinWidth(MIN_WIDTH);
-		scoreCol.setCellValueFactory(new PropertyValueFactory<HighscoreEntry, Integer>("score"));
+		scoreCol.setCellValueFactory(new PropertyValueFactory<HighscoreModel, Integer>("score"));
 		scoreCol.setSortable(false);
 		scoreCol.setResizable(false);
 		
@@ -93,5 +92,4 @@ public class HighscoreScreen extends Application {
 		primaryStage.show();
 
 	}
-
 }
