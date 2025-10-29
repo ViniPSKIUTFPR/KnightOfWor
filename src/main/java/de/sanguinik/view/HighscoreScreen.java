@@ -63,8 +63,15 @@ public class HighscoreScreen extends Application {
 		scoreCol.setSortable(false);
 		scoreCol.setResizable(false);
 		
+		// MELHORIA: Coluna para tempo da fase
+		TableColumn timeCol = new TableColumn("Tempo");
+		timeCol.setMinWidth(MIN_WIDTH);
+		timeCol.setCellValueFactory(new PropertyValueFactory<HighscoreModel, String>("levelTime"));
+		timeCol.setSortable(false);
+		timeCol.setResizable(false);
+		
 		highscoreTable.setItems(dummyData);
-		highscoreTable.getColumns().addAll(nameCol, scoreCol);
+		highscoreTable.getColumns().addAll(nameCol, scoreCol, timeCol); // MELHORIA: Adiciona coluna de tempo
 		
 		Button okBtn = new Button();
 		okBtn.setText("Voltar");
