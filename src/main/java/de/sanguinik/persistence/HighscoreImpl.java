@@ -26,10 +26,11 @@ public class HighscoreImpl implements Highscore {
 		List<HighscoreDTO> scores = new ArrayList<>(); 
 		if (!currentScores.isEmpty()) {
 			scores = currentScores.stream()
-					.map(scoreDTO -> new HighscoreDTO(scoreDTO.getName(), scoreDTO.getScore(), scoreDTO.getDate()))
+					.map(scoreDTO -> new HighscoreDTO(scoreDTO.getName(), scoreDTO.getScore(), scoreDTO.getLevelTime(), scoreDTO.getDate()))
 					.collect(Collectors.toList());
 		}
-		scores.add(new HighscoreDTO(score.getName(), score.getScore(), score.getDate()));
+		// MELHORIA: Salva com tempo da fase
+		scores.add(new HighscoreDTO(score.getName(), score.getScore(), score.getLevelTime(), score.getDate()));
 
         try (Writer writer = new FileWriter(DATABASE)) {
             gson.toJson(scores, writer);
@@ -47,7 +48,10 @@ public class HighscoreImpl implements Highscore {
             Type listType = new TypeToken<List<HighscoreDTO>>(){}.getType();
             List<HighscoreDTO> scores = gson.fromJson(reader, listType);
             return scores.stream()
-                    .map(score -> new HighscoreModel(score.getName(), score.getScore(), score.getDate()))
+                    // MELHORIA: Carrega com tempo da fase, usando construtor com compatibilidade
+                    .map(score -> new HighscoreModel(score.getName(), score.getScore(), score.getLevelTime(), score.getDate()))
+                    // MELHORIA: Ordena por pontuação (maior para menor)
+                    .sorted((a, b) -> Integer.compare(b.getScore(), a.getScore()))
                     .collect(Collectors.toList());
         } catch (IOException e) {
             e.printStackTrace();

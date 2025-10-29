@@ -1,6 +1,9 @@
 package de.sanguinik.model;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
 
 public class Player extends ShootingFigure {
 
@@ -125,7 +128,23 @@ public class Player extends ShootingFigure {
 		}else{
 			isAllowedToMove = true;
 		}
-		
+	}
+	
+	// MOVE METHOD: Movido de Keyboard - elimina Feature Envy
+	// Este método está mais relacionado ao Player do que ao Keyboard
+	public Timeline createMoveTimeline(Direction dir, Image img, Keyboard keyboard) {
+		Timeline t = new Timeline(new KeyFrame(Duration.millis(30), e -> {
+			if (this.isMovable()) {
+				this.setDirection(dir);
+				this.move();
+				// Só altera a imagem se for a última direção pressionada
+				if (keyboard.getLastDirection() == dir) {
+					this.getImageView().setImage(img);
+				}
+			}
+		}));
+		t.setCycleCount(Timeline.INDEFINITE);
+		return t;
 	}
 
 }
