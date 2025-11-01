@@ -589,7 +589,7 @@ public class PlayFieldScreen extends Application {
 					currentPlayer = fadingIn;
 				},
 				new javafx.animation.KeyValue(fadingOut.volumeProperty(), 0.0),
-				new javafx.animation.KeyValue(fadingIn.volumeProperty(), 1.0)
+				new javafx.animation.KeyValue(fadingIn.volumeProperty(), 0.7)
 			)
 		);
 		fade.play();

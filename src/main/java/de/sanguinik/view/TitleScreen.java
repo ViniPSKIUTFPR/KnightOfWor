@@ -19,10 +19,9 @@ public class TitleScreen extends Application {
 	private static final int GRID_GAP = 30;
 	private static final int SCENE_WIDTH = 1024;
 	private static final int SCENE_HEIGHT = 740;
-	private MediaPlayer player;
+	private static MediaPlayer player;
 
 	public static void main(final String[] args) {
-
 		launch(args);
 	}
 
@@ -30,15 +29,22 @@ public class TitleScreen extends Application {
 	public void start(final Stage primaryStage) {
 		primaryStage.setTitle("Knight of Wor");
 		primaryStage.setResizable(false);
-		URL pathToTitleMusic = getClass().getResource("menu.mp3");
-		if (pathToTitleMusic != null) {
-			Media sound = new Media(pathToTitleMusic.toString());
-			player = new MediaPlayer(sound);
-			player.setVolume(0.5);
-			player.play();
-		} else {
-			System.err.println("Musikdatei 'menu.mp3' wurde nicht gefunden!");
-		}
+
+		 // Inicia música apenas se ainda não estiver tocando
+        if (player == null) {
+            URL pathToTitleMusic = getClass().getResource("menu.mp3");
+            if (pathToTitleMusic != null) {
+                Media sound = new Media(pathToTitleMusic.toString());
+                player = new MediaPlayer(sound);
+                player.setVolume(1.0);
+                player.setCycleCount(MediaPlayer.INDEFINITE); // loop infinito
+                player.play();
+            } else {
+                System.err.println("Musikdatei 'menu.mp3' wurde nicht gefunden!");
+            }
+        } else if (player.getStatus() != MediaPlayer.Status.PLAYING) {
+            player.play(); // Retoma a música se estiver pausada
+        }
 
 		GridPane grid = new GridPane();
 		grid.setId("titleGrid");
@@ -56,24 +62,18 @@ public class TitleScreen extends Application {
 		});
 
 		Button options = createButton("Opcoes", (final ActionEvent arg) -> {
-			if (player != null) {
-				player.stop();
-			}
 			Options optionsGUI = new Options();
 			optionsGUI.start(primaryStage);
 		});
 
 		Button highscore = createButton("Pontuacao", (final ActionEvent arg) -> {
-			if (player != null) {
-				player.stop();
-			}
 			HighscoreScreen highscoreScreen = new HighscoreScreen();
 			highscoreScreen.start(primaryStage);
 		});
 
 		Button about = createButton("Creditos", (final ActionEvent arg) -> {
 			if (player != null) {
-				player.stop();
+				player.pause();
 			}
 			Credits credits = new Credits();
 			credits.start(primaryStage);
