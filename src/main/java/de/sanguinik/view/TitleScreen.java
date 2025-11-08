@@ -12,6 +12,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
+import de.sanguinik.persistence.GameStorage;
 
 public class TitleScreen extends Application {
 
@@ -21,7 +22,7 @@ public class TitleScreen extends Application {
 	private static final int SCENE_HEIGHT = 740;
 	private MediaPlayer player;
 
-	public static void main(final String[] args) {
+	public static void main( String[] args) {
 
 		launch(args);
 	}
@@ -39,7 +40,19 @@ public class TitleScreen extends Application {
 		} else {
 			System.err.println("Musikdatei 'menu.mp3' wurde nicht gefunden!");
 		}
+		
+		
+		try {
+		    double musicVol = GameStorage.settings.audio.musicVolume;
+		    boolean musicOn = GameStorage.settings.audio.musicEnabled;
 
+		    player.setVolume(musicVol);
+		    if (musicOn) player.play();
+		    else player.pause();
+		} catch (Throwable t) {
+		    System.err.println("Falha ao aplicar preferências de áudio no TitleScreen: " + t.getMessage());
+		}
+		
 		GridPane grid = new GridPane();
 		grid.setId("titleGrid");
 		grid.setAlignment(Pos.CENTER);
