@@ -21,7 +21,7 @@ public class Credits extends Application {
 
 		Media sound = new Media(getClass().getResource("KoW.mp3").toString());
 		player = new MediaPlayer(sound);
-		player.setVolume(0.5);
+		player.setVolume(1.0);
 		player.play();
 		
 		primaryStage.setTitle("Knight of Wor - Credits");
@@ -55,9 +55,9 @@ public class Credits extends Application {
 		Button okBtn = new Button();
 		okBtn.setText("Zurück");
 		okBtn.setOnAction(new EventHandler<ActionEvent>() {
-
 			@Override
 			public void handle(ActionEvent arg0) {
+				player.stop();
 				TitleScreen title = new TitleScreen();
 				title.start(primaryStage);
 			}
