@@ -35,6 +35,14 @@ import javafx.util.Duration;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
+import javafx.application.Platform;
+import java.lang.reflect.Method;
+import java.lang.reflect.Field;
+
 import de.sanguinik.model.Bullet;
 import de.sanguinik.model.Enemy;
 import de.sanguinik.model.HighscoreModel;
@@ -64,6 +72,10 @@ public class PlayFieldScreen extends Application {
 	private final Group root = new Group();
 	private boolean gameWasPaused = true;
 	private final Label pause = new Label("PAUSE");
+
+	// Corações
+	private Image heartImage;
+	private HBox heartsBox;
 	
 	// MELHORIA: Contador de tempo para cada fase
 	private long levelStartTime;
@@ -215,7 +227,34 @@ public class PlayFieldScreen extends Application {
 		root.getChildren().add(player.getGroup());
 		root.getChildren().addAll(maze.getWalls());
 		root.getChildren().add(score);
-		root.getChildren().add(player.getLivesLabel());
+		
+		// Aqui, é onde tinha o label de vidas. Foi comentado e substituído pelos corações.
+		//root.getChildren().add(player.getLivesLabel());
+		try {
+            heartImage = new Image("file:assets/images/heart.png");
+        } catch (Exception ex) {
+            System.err.println("PlayFieldScreen: falha ao carregar heart.png: " + ex.getMessage());
+            heartImage = null;
+        }
+
+		// Cria o box e posiciona na tela
+        heartsBox = new HBox(6); 
+        heartsBox.setLayoutX(10); 
+        heartsBox.setLayoutY(10); 
+
+        root.getChildren().add(heartsBox);
+        updateHearts();
+
+		Platform.runLater(() -> {
+            try {
+                javafx.geometry.Bounds scoreBounds = score.getBoundsInParent();
+                heartsBox.setLayoutX(scoreBounds.getMinX());
+                heartsBox.setLayoutY(scoreBounds.getMaxY() + 4); 
+            } catch (Exception ex) {
+                System.err.println("Falha ao posicionar heartsBox: " + ex.getMessage());
+            }
+        });
+
 		root.getChildren().add(timeLabel); // MELHORIA: Adiciona o contador de tempo à interface
 
 		timeline.setCycleCount(Timeline.INDEFINITE);
@@ -254,6 +293,7 @@ public class PlayFieldScreen extends Application {
 					}else{
 						timeline.pause();
 						player.loseLife();
+						updateHearts();
 						player.setInvincible(true);
 						player.setAlive(true);
 						timeline.play();
@@ -781,4 +821,41 @@ public class PlayFieldScreen extends Application {
 		}
 		return "Sem bonus de tempo (mais de 1 minuto)";
 	}
+
+	private void updateHearts() {
+        Platform.runLater(() -> {
+            heartsBox.getChildren().clear();
+            int lives = readPlayerLives(player); 
+
+            int count = Math.max(0, Math.min(lives, 10));
+            for (int i = 0; i < count; i++) {
+                ImageView iv = new ImageView();
+                if (heartImage != null) {
+                    iv.setImage(heartImage);
+                }
+                iv.setFitWidth(24); 
+                iv.setFitHeight(24);
+                iv.setPreserveRatio(true);
+                heartsBox.getChildren().add(iv);
+            }
+        });
+    }
+
+
+    private int readPlayerLives(Object p) {
+        if (p == null) return 0;
+        try {
+            try { java.lang.reflect.Method m = p.getClass().getMethod("getLives"); return ((Number)m.invoke(p)).intValue(); } catch (NoSuchMethodException e) {}
+            try { java.lang.reflect.Method m = p.getClass().getMethod("getLifes"); return ((Number)m.invoke(p)).intValue(); } catch (NoSuchMethodException e) {}
+            try { java.lang.reflect.Method m = p.getClass().getMethod("getLife"); return ((Number)m.invoke(p)).intValue(); } catch (NoSuchMethodException e) {}
+
+            try { java.lang.reflect.Field f = p.getClass().getDeclaredField("lives"); f.setAccessible(true); return ((Number)f.get(p)).intValue(); } catch (NoSuchFieldException e) {}
+            try { java.lang.reflect.Field f = p.getClass().getDeclaredField("lifes"); f.setAccessible(true); return ((Number)f.get(p)).intValue(); } catch (NoSuchFieldException e) {}
+        } catch (Exception ex) {
+            System.err.println("readPlayerLives erro: " + ex.getMessage());
+        }
+        return 0;
+    }
 }
+
+    
