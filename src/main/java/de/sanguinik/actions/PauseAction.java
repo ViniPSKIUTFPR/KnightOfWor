@@ -18,7 +18,12 @@ public class PauseAction implements KeyAction {
 
     @Override
     public void execute(KeyEvent e) {
-        screen.pauseGame();
+        try {
+            screen.pauseGame();
+        } catch (Exception e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
         player.toggleMoveable();
     }
 }

@@ -46,6 +46,10 @@ import de.sanguinik.model.ShootCallback;
 import de.sanguinik.model.Target;
 import de.sanguinik.model.TypeOfFigure;
 import de.sanguinik.persistence.HighscoreImpl;
+import de.sanguinik.util.BonusTimeFunctions;
+
+import java.util.Arrays;
+
 public class PlayFieldScreen extends Application {
 
 	private class ShootCallbackImpl implements ShootCallback {
@@ -63,17 +67,15 @@ public class PlayFieldScreen extends Application {
 	private static final int FPS = 30;
 	private final Group root = new Group();
 	private boolean gameWasPaused = true;
-	private final Label pause = new Label("PAUSE");
 	
-	// MELHORIA: Contador de tempo para cada fase
 	private long levelStartTime;
-	private long pausedTime = 0; // Tempo total pausado
-	private long pauseStartTime = 0; // Quando a pausa começou
-	private long finalLevelTime = 0; // Tempo final quando a fase foi completada
+	private long pausedTime = 0;
+	private long pauseStartTime = 0;
+	private long finalLevelTime = 0;
 	private Label timeLabel;
 	private boolean levelCompleted = false;
 	private boolean gamePaused = false;
-	private int lastTimeBonus = 0; // MELHORIA: Último bônus de tempo calculado
+	private int lastTimeBonus = 0;
 	
 	private HighscoreModel entry;
 
@@ -93,6 +95,11 @@ public class PlayFieldScreen extends Application {
 
 	private Stage primaryStage;
 
+	private final java.util.List<String> levels = Arrays.asList("level1", "level2", "level3");
+	private int currentLevelIndex = 0;
+
+	private BonusTimeFunctions bonusTimeFunctions = new BonusTimeFunctions();
+
 	private void loadEnemy(String level){
 		JSONParser parser = new JSONParser();
 		try {
@@ -100,26 +107,34 @@ public class PlayFieldScreen extends Application {
 			JSONObject jsonObject = (JSONObject) obj;
 
 			JSONObject enemys = (JSONObject) jsonObject.get("Enemys");
-			
+			if (enemys == null) return;
+
 			for(int i = 1; i <= enemys.size(); i++){
 				JSONObject enemy = (JSONObject) enemys.get("Enemy"+i);
-				
-				long type = (Long) enemy.get("type");
+				if (enemy == null) continue;
+
+				Number typeNum = (Number) enemy.get("type");
+				int typeInt = typeNum != null ? typeNum.intValue() : 1;
 				TypeOfFigure typeOfFigure = TypeOfFigure.BURWOR;
-				if(type == 1){
+				if(typeInt == 1){
 					typeOfFigure = TypeOfFigure.BURWOR;
-				}else if(type == 2){
+				}else if(typeInt == 2){
 					typeOfFigure = TypeOfFigure.GARWOR;
-				}else if(type == 3){
+				}else if(typeInt == 3){
 					typeOfFigure = TypeOfFigure.THORWOR;
-				}else if(type == 4){
+				}else if(typeInt == 4){
 					typeOfFigure = TypeOfFigure.WIZARD;
 				}
-				
-				Position positionStart = new Position((double) enemy.get("x"),(double) enemy.get("y"));
 
-				long quantity = (Long) enemy.get("quantity");
-				
+				Number nx = (Number) enemy.get("x");
+				Number ny = (Number) enemy.get("y");
+				double px = nx != null ? nx.doubleValue() : 0.0;
+				double py = ny != null ? ny.doubleValue() : 0.0;
+				Position positionStart = new Position(px, py);
+
+				Number qNum = (Number) enemy.get("quantity");
+				int quantity = qNum != null ? qNum.intValue() : 0;
+
 				for(int j = 0; j < quantity; j++){
 					createEnemy(new Target(typeOfFigure, positionStart));
 				}
@@ -165,7 +180,6 @@ public class PlayFieldScreen extends Application {
 			mediaPlayer1.setVolume(1.0);
 			mediaPlayer2.setVolume(0.0);
 
-			// DuraÃ§Ã£o do crossfade em segundos 
 			final double crossfadeDuration = 0.2;
 
 			mediaPlayer1.currentTimeProperty().addListener((obs, oldTime, newTime) -> {
@@ -194,14 +208,13 @@ public class PlayFieldScreen extends Application {
 
 		loadEnemy("level1");
 
-		// Seta a lista de inimigos no objeto de cada inimigo. Caso um projetil do inimigo seja rebatido pelo jogador, os inimigos se tornarÃ£o o target daquele projetil
+		// Seta a lista de inimigos no objeto de cada inimigo. Caso um projetil do inimigo seja rebatido pelo jogador, os inimigos se tornarÃƒÂ£o o target daquele projetil
 		for (Enemy e : enemyList) {
 			e.setInimigos(enemyList);
 		}
 		
 		Label score = new Label("Score: " + player.getScore());
 		
-		// MELHORIA: Inicialização do contador de tempo da fase
 		levelStartTime = System.currentTimeMillis();
 		timeLabel = new Label("Tempo: 00:00");
 		timeLabel.setTextFill(Color.WHITESMOKE);
@@ -216,7 +229,7 @@ public class PlayFieldScreen extends Application {
 		root.getChildren().addAll(maze.getWalls());
 		root.getChildren().add(score);
 		root.getChildren().add(player.getLivesLabel());
-		root.getChildren().add(timeLabel); // MELHORIA: Adiciona o contador de tempo à interface
+		root.getChildren().add(timeLabel); // MELHORIA: Adiciona o contador de tempo Ã  interface
 
 		timeline.setCycleCount(Timeline.INDEFINITE);
 		timeline.setAutoReverse(false);
@@ -228,7 +241,7 @@ public class PlayFieldScreen extends Application {
 				
 				introSequence();
 
-				// Checa colisÃ£o player-inimigo
+				// Checa colisÃƒÂ£o player-inimigo
 				for (Enemy enemy : enemyList) {
 					if (enemy.isAlive() && player.isAlive() && !player.isInvincible() &&
 						player.getRectangle().getBoundsInParent().intersects(enemy.getRectangle().getBoundsInParent())) {
@@ -334,10 +347,10 @@ public class PlayFieldScreen extends Application {
 		Label levelTime = new Label("Tempo da fase: " + getLevelElapsedTimeFormatted());
 		levelTime.setTextFill(Color.YELLOW);
 		
-		// NOVO: Mostra o bônus de tempo detalhado no popup
+		// NOVO: Mostra o bÃ´nus de tempo detalhado no popup
 		long timeInSeconds = finalLevelTime / 1000;
 		int timeBonus = calculateTimeBonus(timeInSeconds);
-		Label bonusInfo = new Label(formatTimeBonus(timeBonus, timeInSeconds));
+		Label bonusInfo = new Label(bonusTimeFunctions.formatTimeBonus(timeBonus, timeInSeconds));
 		bonusInfo.setTextFill(timeBonus > 0 ? Color.GOLD : Color.LIGHTGRAY);
 		bonusInfo.setStyle("-fx-font-weight: bold;");
 		
@@ -347,15 +360,15 @@ public class PlayFieldScreen extends Application {
 		Button ok = new Button("Ok");
 		VBox highscorePopup = new VBox();
 		highscorePopup.setAlignment(Pos.CENTER);
-		highscorePopup.setSpacing(10); // MELHORIA: Adiciona espaçamento entre elementos
+		highscorePopup.setSpacing(10); // MELHORIA: Adiciona espaÃ§amento entre elementos
 		highscorePopup.setStyle("-fx-background-color: rgba(0, 0, 0, 0.8); -fx-padding: 20; -fx-border-color: white; -fx-border-width: 2;"); // MELHORIA: Fundo escuro com borda
 		highscorePopup.getChildren().add(playersPoints);
 		highscorePopup.getChildren().add(levelTime); // MELHORIA: Adiciona o tempo da fase
-		highscorePopup.getChildren().add(bonusInfo); // NOVO: Adiciona info do bônus
+		highscorePopup.getChildren().add(bonusInfo); // NOVO: Adiciona info do bÃ´nus
 		highscorePopup.getChildren().add(enterHighscore);
 		HBox highscoreBox = new HBox();
-		highscoreBox.setAlignment(Pos.CENTER); // MELHORIA: Centraliza o input e botão
-		highscoreBox.setSpacing(10); // MELHORIA: Espaçamento entre campo e botão
+		highscoreBox.setAlignment(Pos.CENTER); // MELHORIA: Centraliza o input e botÃ£o
+		highscoreBox.setSpacing(10); // MELHORIA: EspaÃ§amento entre campo e botÃ£o
 		highscoreBox.getChildren().add(name);
 		highscoreBox.getChildren().add(ok);
 		highscorePopup.getChildren().add(highscoreBox);
@@ -367,7 +380,6 @@ public class PlayFieldScreen extends Application {
 			@Override
 			public void handle(ActionEvent arg0) {
 				HighscoreImpl highscore = new HighscoreImpl();
-				// MELHORIA: Salva o highscore com o tempo da fase
 				entry = new HighscoreModel(name.getText(), player.getScore(), getLevelElapsedTimeFormatted(), new Date());
 				highscore.saveHighscore(entry);
 				gameOver();
@@ -435,9 +447,10 @@ public class PlayFieldScreen extends Application {
 		List<Enemy> enemiesToDelete = new ArrayList<Enemy>();
 
 		if (enemyList.isEmpty()) {
-			// MELHORIA: Marca a fase como completada antes de entrar no highscore
+			// completa nÃ­vel (salva tempo/bÃ´nus) e decide avanÃ§ar ou encerrar
 			completeLevelWithTime();
-			enterHighscore();
+			advanceLevelOrEnd();
+			return;
 		}
 
 		for (Enemy e : enemyList) {
@@ -467,99 +480,37 @@ public class PlayFieldScreen extends Application {
 			currentPlayer.stop();
 		}
 	}
-	
-	// MELHORIA: Variável para controlar o popup de pausa
-	private VBox pausePopup = null;
 
-	public void pauseGame(){
+	private PausedGame pausedGame;
+
+	public void pauseGame() throws Exception{
 		if(gameWasPaused){
-			// Despausar o jogo
-			if (pausePopup != null) {
-				root.getChildren().remove(pausePopup);
-				pausePopup = null;
-			}
 			timeline.play();
 			for (Enemy e : enemyList) {
     			e.startWizardAttack(); 
 			}
-			// MELHORIA: Retoma o timer quando despausar
+
+			if (pausedGame != null) {
+				pausedGame.stop();
+			}
 			resumeLevelTimer();
 			gameWasPaused = false;
 		}else{
-			// Pausar o jogo com popup moderno
-			createPausePopup();
+			gameWasPaused = true;
+			pausedGame = new PausedGame(root, player, timeline, currentPlayer, enemyList, getLevelElapsedTimeFormatted(), e -> {
+				try {
+					pauseGame();
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			});
+			pausedGame.start(primaryStage);
 			for (Enemy e : enemyList) {
     			e.stopWizardAttack(); 
 			}
 			timeline.pause();
-			// MELHORIA: Pausa o timer
 			pauseLevelTimer();
-			gameWasPaused = true;
 		}
-	}
-
-	// MELHORIA: Cria popup de pausa moderno similar ao de pontuação
-	private void createPausePopup() {
-		Label pauseTitle = new Label("JOGO PAUSADO");
-		pauseTitle.setTextFill(Color.WHITESMOKE);
-		pauseTitle.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
-
-		Label currentScore = new Label("Pontuacao Atual: " + player.getScore());
-		currentScore.setTextFill(Color.LIGHTBLUE);
-		currentScore.setStyle("-fx-font-size: 16px;");
-
-		Label currentTime = new Label("Tempo Atual: " + getLevelElapsedTimeFormatted());
-		currentTime.setTextFill(Color.YELLOW);
-		currentTime.setStyle("-fx-font-size: 16px;");
-
-		Label livesRemaining = new Label("Vidas Restantes: " + player.getLives());
-		livesRemaining.setTextFill(Color.LIGHTGREEN);
-		livesRemaining.setStyle("-fx-font-size: 16px;");
-
-		Button continueBtn = new Button("Continuar");
-		continueBtn.setStyle("-fx-font-size: 14px; -fx-pref-width: 120px;");
-		continueBtn.setOnAction(e -> pauseGame()); // Chama novamente para despausar
-
-		Button mainMenuBtn = new Button("Menu");
-		mainMenuBtn.setStyle("-fx-font-size: 14px; -fx-pref-width: 120px;");
-		mainMenuBtn.setOnAction(e -> {
-			// Para tudo e volta ao menu
-			timeline.stop();
-			if (currentPlayer != null) {
-				currentPlayer.stop();
-			}
-			for (Enemy enemy : enemyList) {
-				if (enemy.getType() == TypeOfFigure.WIZARD) enemy.stopWizardAttack();
-			}
-			TitleScreen titleScreen = new TitleScreen();
-			titleScreen.start(primaryStage);
-		});
-
-		// Container para os botões
-		HBox buttonBox = new HBox();
-		buttonBox.setAlignment(Pos.CENTER);
-		buttonBox.setSpacing(15);
-		buttonBox.getChildren().addAll(continueBtn, mainMenuBtn);
-
-		// Popup principal
-		pausePopup = new VBox();
-		pausePopup.setAlignment(Pos.CENTER);
-		pausePopup.setSpacing(15);
-		pausePopup.setStyle("-fx-background-color: rgba(0, 0, 0, 0.9); -fx-padding: 30; -fx-border-color: white; -fx-border-width: 2; -fx-border-radius: 10; -fx-background-radius: 10;");
-		
-		pausePopup.getChildren().addAll(
-			pauseTitle,
-			currentScore,
-			currentTime,
-			livesRemaining,
-			buttonBox
-		);
-
-		// Centraliza o popup na tela
-		pausePopup.setLayoutX(root.getScene().getWidth()/2 - 150);
-		pausePopup.setLayoutY(root.getScene().getHeight()/2 - 120);
-		
-		root.getChildren().add(pausePopup);
 	}
 
 	public void muteMusic() {
@@ -692,7 +643,7 @@ public class PlayFieldScreen extends Application {
 			timeLabel.setText("Tempo Final: " + formatTime(finalLevelTime));
 			
 			// NOVO: Mostra o bônus na tela (com categoria)
-			Label bonusLabel = new Label(formatTimeBonus(lastTimeBonus, timeInSeconds));
+			Label bonusLabel = new Label(bonusTimeFunctions.formatTimeBonus(lastTimeBonus, timeInSeconds));
 			bonusLabel.setTextFill(lastTimeBonus > 0 ? Color.GOLD : Color.LIGHTGRAY);
 			bonusLabel.setLayoutX(10);
 			bonusLabel.setLayoutY(80);
@@ -749,36 +700,75 @@ public class PlayFieldScreen extends Application {
 		// Garante que o bônus não seja negativo
 		return Math.max(0, bonus);
 	}
-	
-	/**
-	 * Descrição da categoria de tempo baseada na performance (ajustada para sistema ultra desafiador)
-	 */
-	private String getTimeCategoryDescription(long timeInSeconds) {
-		if (timeInSeconds <= 10) {
-			return "(LEGENDARIO!)";
-		} else if (timeInSeconds <= 15) {
-			return "(PERFEITO!)";
-		} else if (timeInSeconds <= 25) {
-			return "(EXCELENTE!)";
-		} else if (timeInSeconds <= 35) {
-			return "(MUITO BOM!)";
-		} else if (timeInSeconds <= 45) {
-			return "(BOM!)";
-		} else if (timeInSeconds <= 60) {
-			return "(RAZOAVEL)";
-		} else {
-			return "(SEM BONUS)";
-		}
-	}
-	
-	/**
-	 * Formata o bônus de tempo para exibição
-	 */
-	private String formatTimeBonus(int bonus, long timeInSeconds) {
-		if (bonus > 0) {
-			String timeCategory = getTimeCategoryDescription(timeInSeconds);
-			return "Bonus de Tempo: +" + bonus + " pontos! " + timeCategory;
-		}
-		return "Sem bonus de tempo (mais de 1 minuto)";
-	}
+
+    private void advanceLevelOrEnd() {
+        if (player != null && player.getLives() > 0 && currentLevelIndex < levels.size() - 1) {
+
+            for (Enemy e : enemyList) {
+                if (e.getType() == TypeOfFigure.WIZARD) e.stopWizardAttack();
+                root.getChildren().remove(e.getGroup());
+            }
+            enemyList.clear();
+			
+            for (Bullet b : bulletList) {
+                root.getChildren().remove(b.getGroup());
+            }
+            bulletList.clear();
+
+            if (maze != null) {
+                root.getChildren().removeAll(maze.getWalls());
+            }
+
+            currentLevelIndex++;
+            String nextLevel = levels.get(currentLevelIndex);
+            maze = new Maze(nextLevel);
+
+            root.getChildren().addAll(maze.getWalls());
+
+            // Atualiza o player para usar o novo maze.
+			int savedLives = player.getLives();
+			int savedScore = player.getScore();
+
+			try { root.getChildren().remove(player.getGroup()); } catch (Exception ignored) {}
+
+			// recria player com o novo maze
+			player = new Player(maze);
+			player.setShootCallback(new ShootCallbackImpl());
+			player.setRoot(root);
+			root.getChildren().add(player.getGroup()); 
+			try { player.setLives(savedLives); } catch (Exception ignored) {}
+			try { player.setScore(savedScore); } catch (Exception ignored) {}
+
+			try {
+				javafx.scene.Scene scene = primaryStage.getScene();
+				if (scene != null) {
+					Keyboard keyboard = new Keyboard(player, this);
+					scene.setOnKeyPressed(keyboard);
+					scene.setOnKeyReleased(keyboard);
+				}
+			} catch (Exception ignored) {}
+
+            loadEnemy(nextLevel);
+
+            for (Enemy e : enemyList) {
+                e.setInimigos(enemyList);
+                e.setShootCallback(new ShootCallbackImpl());
+                if (!root.getChildren().contains(e.getGroup())) {
+                    root.getChildren().add(e.getGroup());
+                }
+            }
+
+            try {
+                player.getTargets().clear();
+                for (Enemy e : enemyList) {
+                    if (e.isAlive()) player.addTargets(e);
+                }
+            } catch (Exception ignored) {}
+
+            resetLevelTimer();
+            gameWasPaused = true;
+        } else {
+            enterHighscore();
+        }
+    }
 }
