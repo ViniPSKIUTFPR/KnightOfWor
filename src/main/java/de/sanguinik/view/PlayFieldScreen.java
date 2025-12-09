@@ -55,6 +55,7 @@ import de.sanguinik.model.Target;
 import de.sanguinik.model.TypeOfFigure;
 import de.sanguinik.persistence.HighscoreImpl;
 import de.sanguinik.util.BonusTimeFunctions;
+import de.sanguinik.util.VolumeManager;
 
 import java.util.Arrays;
 
@@ -186,11 +187,12 @@ public class PlayFieldScreen extends Application {
 		if (pathToLevelMusic != null) {
 			music = new Media(pathToLevelMusic.toString());
 			mediaPlayer1 = new MediaPlayer(music);
-			mediaPlayer2 = new MediaPlayer(music);
-			currentPlayer = mediaPlayer1;
+            mediaPlayer2 = new MediaPlayer(music);
+            currentPlayer = mediaPlayer1;
 
-			mediaPlayer1.setVolume(1.0);
-			mediaPlayer2.setVolume(0.0);
+            // MELHORIA: Aplica o volume salvo ao iniciar
+            mediaPlayer1.setVolume(VolumeManager.getVolume());
+            mediaPlayer2.setVolume(0.0);
 
 			final double crossfadeDuration = 0.2;
 
@@ -554,14 +556,16 @@ public class PlayFieldScreen extends Application {
 	}
 
 	public void muteMusic() {
-		if(currentPlayer != null) {
-			if(currentPlayer.isMute()){
-				currentPlayer.setMute(false);
-			}else{
-				currentPlayer.setMute(true);
-			}
-		}
-	}
+        if(currentPlayer != null) {
+            if(currentPlayer.isMute()){
+                currentPlayer.setMute(false);
+                // Restaura o volume salvo ao desmutar
+                currentPlayer.setVolume(VolumeManager.getVolume());
+            }else{
+                currentPlayer.setMute(true);
+            }
+        }
+    }
 
 	// Crossfade da música (impede que haja um corte seco entre cada loop da trilha sonora)
 	private void startCrossfade(MediaPlayer fadingOut, MediaPlayer fadingIn, double durationSeconds) {
