@@ -115,7 +115,12 @@ public class Player extends ShootingFigure {
 	@Override
 	public void bulletHasHitATarget(final Figure target) {
 		super.bulletHasHitATarget(target);
-		target.setAlive(false);
+		
+		if (target instanceof Enemy) {
+			((Enemy) target).takeDamage();
+		} else {
+			target.setAlive(false);
+		}
 
 		int points = target.getType().getPoints();
 		score += points;
