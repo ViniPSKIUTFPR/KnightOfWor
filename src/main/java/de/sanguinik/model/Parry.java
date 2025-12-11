@@ -13,7 +13,7 @@ import javafx.scene.media.AudioClip;
 public class Parry {
     private static final String NOTE_PATH = "/de/sanguinik/model/note.png";
     private static final double TAMANHO = 50;
-    private static final double DURACAO = 0.2;
+    private static final double DURACAO = 0.3;
     private static final double COOLDOWN = 0.5;
 
     private static long lastUse = 0;

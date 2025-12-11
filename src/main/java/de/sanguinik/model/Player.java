@@ -22,7 +22,6 @@ public class Player extends ShootingFigure {
 		getImageView().setImage(image);
 		getImageView().setX(START_POSITION_PLAYER_1.getX());
 		getImageView().setY(START_POSITION_PLAYER_1.getY());
-		lives = 4;
 		livesLabel = new Label("Leben: " + lives);
 		livesLabel.setLayoutY(40);
 	}

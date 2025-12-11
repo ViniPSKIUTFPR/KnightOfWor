@@ -2,21 +2,21 @@
 	"Enemys": {
 		"Enemy1": {
  			"type":1,
- 			"x":130,
-			"y":130,
+ 			"x":130.0,
+			"y":130.0,
 			"quantity":2			
  		},
 		"Enemy2": {
  			"type":2,
- 			"x":855,
-			"y":510,
+ 			"x":855.0,
+			"y":510.0,
 			"quantity":1			
  		},
 		"Enemy3": {
  			"type":3,
- 			"x":855,
-			"y":130,
-			"quantity":2		
+ 			"x":855.0,
+			"y":130.0,
+			"quantity":1		
  		}
  	},
 	"walls": {
@@ -45,172 +45,154 @@
 			"height":493
 		},
 		"Block5": {
-			"x":256,
+			"x":400,
 			"y":70,
 			"width":10,
 			"height":83
 		},
 		"Block6": {
-			"x":760,
+			"x":616,
 			"y":70,
 			"width":10,
 			"height":83
 		},
 		"Block7": {
-			"x":328,
+			"x":184,
 			"y":153,
-			"width":72,
+			"width":144,
 			"height":10
 		},
 		"Block8": {
-			"x":472,
+			"x":688,
 			"y":153,
-			"width":72,
+			"width":144,
 			"height":10
 		},
 		"Block9": {
-			"x":616,
+			"x":184,
 			"y":153,
-			"width":72,
-			"height":10
+			"width":10,
+			"height":83
 		},
 		"Block10": {
-			"x":184,
+			"x":472,
 			"y":153,
 			"width":10,
 			"height":83
 		},
 		"Block11": {
-			"x":328,
+			"x":544,
 			"y":153,
 			"width":10,
-			"height":166
+			"height":83
 		},
 		"Block12": {
-			"x":688,
-			"y":153,
-			"width":10,
-			"height":166
-		},
-		"Block13": {
 			"x":832,
 			"y":153,
 			"width":10,
 			"height":83
 		},
-		"Block14": {
-			"x":400,
+		"Block13": {
+			"x":256,
 			"y":236,
-			"width":72,
+			"width":144,
+			"height":10
+		},
+		"Block14": {
+			"x":616,
+			"y":236,
+			"width":144,
 			"height":10
 		},
 		"Block15": {
-			"x":544,
-			"y":236,
-			"width":72,
-			"height":10
-		},
-		"Block16": {
 			"x":256,
 			"y":236,
 			"width":10,
-			"height":83
-		},
-		"Block17": {
-			"x":472,
-			"y":236,
-			"width":10,
 			"height":166
 		},
-		"Block18": {
-			"x":544,
-			"y":236,
-			"width":10,
-			"height":166
-		},
-		"Block19": {
+		"Block16": {
 			"x":760,
 			"y":236,
 			"width":10,
-			"height":83
+			"height":166
 		},
-		"Block20": {
+		"Block17": {
 			"x":112,
 			"y":319,
-			"width":144,
+			"width":72,
+			"height":10
+		},
+		"Block18": {
+			"x":400,
+			"y":319,
+			"width":72,
+			"height":10
+		},
+		"Block19": {
+			"x":544,
+			"y":319,
+			"width":72,
+			"height":10
+		},
+		"Block20": {
+			"x":832,
+			"y":319,
+			"width":72,
 			"height":10
 		},
 		"Block21": {
 			"x":328,
 			"y":319,
-			"width":72,
-			"height":10
+			"width":10,
+			"height":83
 		},
 		"Block22": {
-			"x":616,
+			"x":688,
 			"y":319,
-			"width":72,
-			"height":10
+			"width":10,
+			"height":83
 		},
 		"Block23": {
-			"x":760,
-			"y":319,
-			"width":144,
+			"x":400,
+			"y":402,
+			"width":216,
 			"height":10
 		},
 		"Block24": {
-			"x":256,
-			"y":402,
-			"width":144,
-			"height":10
-		},
-		"Block25": {
-			"x":616,
-			"y":402,
-			"width":144,
-			"height":10
-		},
-		"Block26": {
 			"x":184,
 			"y":402,
 			"width":10,
 			"height":83
 		},
-		"Block27": {
+		"Block25": {
 			"x":832,
 			"y":402,
 			"width":10,
 			"height":83
 		},
-		"Block28": {
-			"x":472,
+		"Block26": {
+			"x":400,
 			"y":485,
 			"width":72,
 			"height":10
 		},
+		"Block27": {
+			"x":544,
+			"y":485,
+			"width":72,
+			"height":10
+		},
+		"Block28": {
+			"x":328,
+			"y":485,
+			"width":10,
+			"height":83
+		},
 		"Block29": {
-			"x":256,
+			"x":688,
 			"y":485,
 			"width":10,
 			"height":83
-		},
-		"Block30": {
-			"x":400,
-			"y":485,
-			"width":10,
-			"height":83
-		},
-		"Block31": {
-			"x":616,
-			"y":485,
-			"width":10,
-			"height":83
-		},
-		"Block32": {
-			"x":760,
-			"y":485,
-			"width":10,
-			"height":82
 		}
 	}
 }
