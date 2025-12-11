@@ -213,7 +213,7 @@ public class PlayFieldScreen extends Application {
             primaryStage.setTitle("Knight of Wor");
             primaryStage.setResizable(false);
 
-            // 1) Valores vindos do save (ou padrão, se não tiver save)
+            
             int level = hasLoadedState ? savedLevel : 1;
             int initialScore = hasLoadedState ? savedScore : 0;
             int initialLives = hasLoadedState ? savedLives : 3;
@@ -273,7 +273,7 @@ public class PlayFieldScreen extends Application {
 
             Label score = new Label("Score: " + player.getScore());
 
-            if (hasLoadedState) { // jogador já tinha tempo salvo
+            if (hasLoadedState) { // jogador jï¿½ tinha tempo salvo
                 levelStartTime = System.currentTimeMillis() - savedElapsedTime;
             } else { // nova fase
                 levelStartTime = System.currentTimeMillis();
@@ -303,7 +303,7 @@ public class PlayFieldScreen extends Application {
             heartsBox.setLayoutY(10);
 
             root.getChildren().add(heartsBox);
-            updateHearts(); // ? vai usar as vidas que você carregou
+            updateHearts(); // ? vai usar as vidas que vocï¿½ carregou
 
             Platform.runLater(() -> {
                 try {
@@ -326,7 +326,7 @@ public class PlayFieldScreen extends Application {
 
                     introSequence();
 
-                    // Checa colisão player-inimigo
+                    // Checa colisï¿½o player-inimigo
                     for (Enemy enemy : enemyList) {
                         if (enemy.isAlive() && player.isAlive() && !player.isInvincible() &&
                             player.getRectangle().getBoundsInParent().intersects(enemy.getRectangle().getBoundsInParent())) {
@@ -411,7 +411,7 @@ public class PlayFieldScreen extends Application {
 
         
         /*
-         * Melhoria: Verifica as informações de vidas, score, tempo e level e salva em arquivo
+         * Melhoria: Verifica as informaï¿½ï¿½es de vidas, score, tempo e level e salva em arquivo
          */
         private void checkAndSaveProgress() {
             if (player == null) return;
