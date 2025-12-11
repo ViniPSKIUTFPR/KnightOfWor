@@ -56,6 +56,7 @@ import de.sanguinik.util.BonusTimeFunctions;
 import de.sanguinik.util.VolumeManager;
 
 import java.util.Arrays;
+import javafx.animation.AnimationTimer;
 
 public class PlayFieldScreen extends Application {
 
@@ -109,7 +110,20 @@ public class PlayFieldScreen extends Application {
 	private MediaPlayer mediaPlayer2;
 	private MediaPlayer currentPlayer;
 	private boolean useFirstPlayer = true;
+        
 
+        /*
+         * Melhoria de Performace 
+         * * Inclusão de fps configurável
+         */
+        public static int TARGET_FPS = FPSConfig.getFPS();
+        private long nanosPerFrame = 1_000_000_000L / TARGET_FPS;
+
+        private AnimationTimer gameLoop;
+        
+        private Label scoreLabel;
+
+        
 	/**
 	 * Mit dieser Wahrscheinlichkeit wird ein mal pro Sekunde geschossen.
 	 */
@@ -226,7 +240,6 @@ public class PlayFieldScreen extends Application {
                 mediaPlayer2 = new MediaPlayer(music);
                 currentPlayer = mediaPlayer1;
 
-                // MELHORIA: Aplica o volume salvo ao iniciar
                 mediaPlayer1.setVolume(VolumeManager.getVolume());
                 mediaPlayer2.setVolume(0.0);
 
@@ -234,14 +247,16 @@ public class PlayFieldScreen extends Application {
 
                 mediaPlayer1.currentTimeProperty().addListener((obs, oldTime, newTime) -> {
                     Duration total = mediaPlayer1.getTotalDuration();
-                    if (total != null && newTime != null && total.toSeconds() - newTime.toSeconds() <= crossfadeDuration && useFirstPlayer) {
+                    if (total != null && newTime != null &&
+                        total.toSeconds() - newTime.toSeconds() <= crossfadeDuration && useFirstPlayer) {
                         startCrossfade(mediaPlayer1, mediaPlayer2, crossfadeDuration);
                         useFirstPlayer = false;
                     }
                 });
                 mediaPlayer2.currentTimeProperty().addListener((obs, oldTime, newTime) -> {
                     Duration total = mediaPlayer2.getTotalDuration();
-                    if (total != null && newTime != null && total.toSeconds() - newTime.toSeconds() <= crossfadeDuration && !useFirstPlayer) {
+                    if (total != null && newTime != null &&
+                        total.toSeconds() - newTime.toSeconds() <= crossfadeDuration && !useFirstPlayer) {
                         startCrossfade(mediaPlayer2, mediaPlayer1, crossfadeDuration);
                         useFirstPlayer = true;
                     }
@@ -266,16 +281,17 @@ public class PlayFieldScreen extends Application {
             // 4) Carrega inimigos do level correspondente
             loadEnemy(levelName);
 
-            // Seta a lista de inimigos no objeto de cada inimigo.
             for (Enemy e : enemyList) {
                 e.setInimigos(enemyList);
             }
 
-            Label score = new Label("Score: " + player.getScore());
+   
+            scoreLabel = new Label("Score: " + player.getScore());
+            root.getChildren().add(scoreLabel);
 
-            if (hasLoadedState) { // jogador já tinha tempo salvo
+            if (hasLoadedState) {
                 levelStartTime = System.currentTimeMillis() - savedElapsedTime;
-            } else { // nova fase
+            } else {
                 levelStartTime = System.currentTimeMillis();
             }
             timeLabel = new Label("Tempo: 00:00");
@@ -289,7 +305,6 @@ public class PlayFieldScreen extends Application {
 
             root.getChildren().add(player.getGroup());
             root.getChildren().addAll(maze.getWalls());
-            root.getChildren().add(score);
 
             try {
                 heartImage = new Image("file:assets/images/heart.png");
@@ -303,11 +318,11 @@ public class PlayFieldScreen extends Application {
             heartsBox.setLayoutY(10);
 
             root.getChildren().add(heartsBox);
-            updateHearts(); // ? vai usar as vidas que você carregou
+            updateHearts();
 
             Platform.runLater(() -> {
                 try {
-                    javafx.geometry.Bounds scoreBounds = score.getBoundsInParent();
+                    javafx.geometry.Bounds scoreBounds = scoreLabel.getBoundsInParent();
                     heartsBox.setLayoutX(scoreBounds.getMinX());
                     heartsBox.setLayoutY(scoreBounds.getMaxY() + 4);
                 } catch (Exception ex) {
@@ -317,74 +332,32 @@ public class PlayFieldScreen extends Application {
 
             root.getChildren().add(timeLabel);
 
-            timeline.setCycleCount(Timeline.INDEFINITE);
-            timeline.setAutoReverse(false);
+            gamePaused = false;
 
-            EventHandler<ActionEvent> actionPerFrame = new EventHandler<ActionEvent>() {
+            gameLoop = new AnimationTimer() {
+                private long lastUpdate = 0;
+
                 @Override
-                public void handle(final ActionEvent t) {
-
-                    introSequence();
-
-                    // Checa colisão player-inimigo
-                    for (Enemy enemy : enemyList) {
-                        if (enemy.isAlive() && player.isAlive() && !player.isInvincible() &&
-                            player.getRectangle().getBoundsInParent().intersects(enemy.getRectangle().getBoundsInParent())) {
-                            player.setAlive(false);
-                            break;
-                        }
+                public void handle(long now) {
+                    if (lastUpdate == 0) {
+                        lastUpdate = now;
+                        return;
                     }
 
-                    if (checkThatPlayerIsStillAlive()) {
-                        moveAllEnemies();
-                        moveAllBullets();
-                        score.setText("Score: " + player.getScore());
-
-                        updateLevelTimer();
-                        checkAndSaveProgress();
-                    } else {
-
-                        if (player.getLives() == 0) {
-                            checkAndSaveProgress();
-                            enterHighscore();
-
-                        } else {
-                            timeline.pause();
-                            player.loseLife();
-                            updateHearts();
-                            
-                            checkAndSaveProgress();
-                            
-                            player.setInvincible(true);
-                            player.setAlive(true);
-                            timeline.play();
-                            Timer timer = new Timer();
-                            ColorAdjust sombra = new ColorAdjust();
-                            sombra.setBrightness(-0.7);
-                            player.getImageView().setEffect(sombra);
-                            timer.schedule(new TimerTask() {
-
-                                @Override
-                                public void run() {
-                                    Platform.runLater(() -> {
-                                        player.setInvincible(false);
-                                        player.getImageView().setEffect(null);
-                                    });
-
-                                }
-                            }, 3000);
-
-                        }
-
+                    if (now - lastUpdate < nanosPerFrame) {
+                        return; // respeita o FPS configurável
                     }
 
+                    double deltaSeconds = (now - lastUpdate) / 1_000_000_000.0;
+                    lastUpdate = now;
+
+                    if (!gamePaused) {
+                        gameUpdate(deltaSeconds);
+                    }
                 }
-
             };
 
-            KeyFrame keyframe = new KeyFrame(Duration.millis(ONE_SECOND / FPS), actionPerFrame);
-            timeline.getKeyFrames().add(keyframe);
-            timeline.play();
+            gameLoop.start();
 
             Scene scene = new Scene(root, 1024, 740);
             scene.getStylesheets().add(TitleScreen.class.getResource("controls.css").toExternalForm());
@@ -398,18 +371,82 @@ public class PlayFieldScreen extends Application {
             primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
                 @Override
                 public void handle(final WindowEvent w) {
-                    timeline.stop();
+                    if (gameLoop != null) {
+                        gameLoop.stop();
+                    }
                     if (currentPlayer != null) {
                         currentPlayer.stop();
                     }
                     System.exit(0);
                 }
             });
-            
+
             checkAndSaveProgress();
         }
 
-        
+
+        private void gameUpdate(double deltaSeconds) {
+
+            introSequence();
+
+            // Checa colisão player-inimigo
+            for (Enemy enemy : enemyList) {
+                if (enemy.isAlive() && player.isAlive() && !player.isInvincible() &&
+                    player.getRectangle().getBoundsInParent().intersects(enemy.getRectangle().getBoundsInParent())) {
+                    player.setAlive(false);
+                    break;
+                }
+            }
+
+            if (checkThatPlayerIsStillAlive()) {
+
+                moveAllEnemies();
+                moveAllBullets();
+                scoreLabel.setText("Score: " + player.getScore());
+
+                updateLevelTimer();
+                checkAndSaveProgress();
+
+            } else {
+
+                if (player.getLives() == 0) {
+
+                    checkAndSaveProgress();
+                    enterHighscore();
+
+                } else {
+
+                    // --- EQUIVALENTE AO timeline.pause() ---
+                    gamePaused = true;
+
+                    player.loseLife();
+                    updateHearts();
+
+                    checkAndSaveProgress();
+
+                    player.setInvincible(true);
+                    player.setAlive(true);
+
+                    // --- EQUIVALENTE AO timeline.play() COM DELAY ---
+                    Timer timer = new Timer();
+                    ColorAdjust sombra = new ColorAdjust();
+                    sombra.setBrightness(-0.7);
+                    player.getImageView().setEffect(sombra);
+
+                    timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            Platform.runLater(() -> {
+                                player.setInvincible(false);
+                                player.getImageView().setEffect(null);
+                                gamePaused = false; // volta o jogo a rodar
+                            });
+                        }
+                    }, 3000);
+                }
+            }
+        }
+
         /*
          * Melhoria: Verifica as informações de vidas, score, tempo e level e salva em arquivo
          */
@@ -513,7 +550,7 @@ public class PlayFieldScreen extends Application {
 		ready.setLayoutY(root.getScene().getHeight()/2);
 
 		if(gameWasPaused){
-			timeline.pause();
+			gamePaused = true;
 			// Pausa ataques de todos os magos
 			for (Enemy e : enemyList) {
 				if (e.getType() == TypeOfFigure.WIZARD) e.stopWizardAttack();
@@ -534,7 +571,7 @@ public class PlayFieldScreen extends Application {
 				@Override
 				public void run() {
 					Platform.runLater(() -> {
-						timeline.play();
+						gamePaused = false;
 						player.toggleMoveable();
 						root.getChildren().remove(ready);
 						// Retoma ataques de todos os magos
@@ -605,7 +642,7 @@ public class PlayFieldScreen extends Application {
 
 	public void pauseGame() throws Exception{
 		if(gameWasPaused){
-			timeline.play();
+			gamePaused = false;
 			for (Enemy e : enemyList) {
     			e.startWizardAttack(); 
 			}
@@ -628,7 +665,7 @@ public class PlayFieldScreen extends Application {
 			for (Enemy e : enemyList) {
     			e.stopWizardAttack(); 
 			}
-			timeline.pause();
+			gamePaused = true;
 			pauseLevelTimer();
 		}
 	}
