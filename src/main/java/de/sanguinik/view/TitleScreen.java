@@ -1,5 +1,8 @@
 package de.sanguinik.view;
 
+import de.sanguinik.persistence.GameStateManager;
+import de.sanguinik.model.GameState;
+import java.io.IOException;
 import java.net.URL;
 
 import javafx.application.Application;
@@ -7,6 +10,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 import javafx.scene.media.Media;
@@ -21,8 +25,9 @@ public class TitleScreen extends Application {
 	private static final int SCENE_HEIGHT = 740;
 	private static MediaPlayer player;
 
-	public static void main(final String[] args) {
-		launch(args);
+	public static void main(String[] args)
+        {
+            launch(args);
 	}
 
 	@Override
@@ -60,6 +65,33 @@ public class TitleScreen extends Application {
 			PlayFieldScreen psc = new PlayFieldScreen();
 			psc.start(primaryStage);
 		});
+                
+                Button resume = createButton("Continuar", (final ActionEvent arg) -> {
+                    try 
+                    {
+                        GameState state = GameStateManager.load();
+                        if (state != null) {
+                            if (player != null) player.stop();
+                            PlayFieldScreen psc = new PlayFieldScreen(state);
+                            psc.start(primaryStage);
+                        } else {
+                            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                            alert.setTitle("Informa��o");
+                            alert.setHeaderText(null);
+                            alert.setContentText("Nenhum progresso salvo encontrado.");
+                            alert.showAndWait();   
+                        }
+                    } 
+                    catch (IOException e) 
+                    {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Inconist�ncia ao recuperar avan�o do jogo");
+                        alert.setHeaderText(null);
+                        alert.setContentText(e.getMessage());
+                        alert.showAndWait();  
+                    }
+                });
+
 
 		Button options = createButton("Opcoes", (final ActionEvent arg) -> {
 			Options optionsGUI = new Options();
@@ -89,9 +121,10 @@ public class TitleScreen extends Application {
 
 		grid.add(newGame, 0, 0);
 		grid.add(options, 0, 1);
-		grid.add(highscore, 0, 2);
-		grid.add(about, 0, 3);
-		grid.add(close, 0, 4);
+                grid.add(resume, 0, 2);
+		grid.add(highscore, 0, 3);
+		grid.add(about, 0, 4);
+		grid.add(close, 0, 5);
 
 		Scene scene = new Scene(grid, SCENE_WIDTH, SCENE_HEIGHT);
 		scene.getStylesheets().add(TitleScreen.class.getResource("controls.css").toExternalForm());
