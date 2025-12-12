@@ -17,7 +17,6 @@ import org.json.simple.parser.ParseException;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
@@ -27,7 +26,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.effect.ColorAdjust;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
@@ -40,11 +38,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.application.Platform;
-import java.lang.reflect.Method;
-import java.lang.reflect.Field;
 
 import de.sanguinik.model.Bullet;
 import de.sanguinik.model.Enemy;
+import de.sanguinik.model.GameState;
 import de.sanguinik.model.HighscoreModel;
 import de.sanguinik.model.Keyboard;
 import de.sanguinik.model.Maze;
@@ -53,10 +50,13 @@ import de.sanguinik.model.Position;
 import de.sanguinik.model.ShootCallback;
 import de.sanguinik.model.Target;
 import de.sanguinik.model.TypeOfFigure;
+import de.sanguinik.persistence.GameStateManager;
 import de.sanguinik.persistence.HighscoreImpl;
 import de.sanguinik.util.BonusTimeFunctions;
+import de.sanguinik.util.VolumeManager;
 
 import java.util.Arrays;
+import javafx.animation.AnimationTimer;
 
 public class PlayFieldScreen extends Application {
 
@@ -75,7 +75,21 @@ public class PlayFieldScreen extends Application {
 	private static final int FPS = 30;
 	private final Group root = new Group();
 	private boolean gameWasPaused = true;
+        
+        // Load do state
+  private int savedLevel = 1;
+  private int savedScore = 0;
+  private int savedLives = 5;
+  private long savedElapsedTime = 0;
+  private boolean hasLoadedState = false;
 
+  private long currentElapsedTimeMs = 0; // tempo atual da fase em ms
+
+
+  private int currentLevel = 1;
+  private int lastSavedScore = Integer.MIN_VALUE;
+  private int lastSavedLives = Integer.MIN_VALUE;
+        
 	// Corações
 	private Image heartImage;
 	private HBox heartsBox;
@@ -96,7 +110,20 @@ public class PlayFieldScreen extends Application {
 	private MediaPlayer mediaPlayer2;
 	private MediaPlayer currentPlayer;
 	private boolean useFirstPlayer = true;
+        
 
+        /*
+         * Melhoria de Performace 
+         * * Inclus�o de fps configur�vel
+         */
+        public static int TARGET_FPS = FPSConfig.getFPS();
+        private long nanosPerFrame = 1_000_000_000L / TARGET_FPS;
+
+        private AnimationTimer gameLoop;
+        
+        private Label scoreLabel;
+
+        
 	/**
 	 * Mit dieser Wahrscheinlichkeit wird ein mal pro Sekunde geschossen.
 	 */
@@ -111,6 +138,24 @@ public class PlayFieldScreen extends Application {
 	private int currentLevelIndex = 0;
 
 	private BonusTimeFunctions bonusTimeFunctions = new BonusTimeFunctions();
+        
+        public PlayFieldScreen(GameState state) {
+            if (state != null) {
+                this.savedLevel = state.level;
+                this.savedScore = state.score;
+                this.savedLives = state.lives;
+                this.savedElapsedTime = state.elapsedTime;
+                this.hasLoadedState = true;
+            }
+        }
+        
+        public PlayFieldScreen() {
+            this.savedLevel = 1;
+            this.savedScore = 0;
+            this.savedLives = 3;
+            this.hasLoadedState = true;
+        }
+
 
 	private void loadEnemy(String level){
 		JSONParser parser = new JSONParser();
@@ -177,190 +222,262 @@ public class PlayFieldScreen extends Application {
 	}
 
 	@Override
-	public void start(final Stage primaryStage) {
-		this.primaryStage = primaryStage;
-		primaryStage.setTitle("Knight of Wor");
-		primaryStage.setResizable(false);
+        public void start(final Stage primaryStage) {
+            this.primaryStage = primaryStage;
+            primaryStage.setTitle("Knight of Wor");
+            primaryStage.setResizable(false);
 
-		URL pathToLevelMusic = getClass().getResource("KoWLong.mp3");
-		if (pathToLevelMusic != null) {
-			music = new Media(pathToLevelMusic.toString());
-			mediaPlayer1 = new MediaPlayer(music);
-			mediaPlayer2 = new MediaPlayer(music);
-			currentPlayer = mediaPlayer1;
+            // 1) Valores vindos do save (ou padr�o, se n�o tiver save)
+            int level = hasLoadedState ? savedLevel : 1;
+            int initialScore = hasLoadedState ? savedScore : 0;
+            int initialLives = hasLoadedState ? savedLives : 3;
 
-			mediaPlayer1.setVolume(1.0);
-			mediaPlayer2.setVolume(0.0);
+            URL pathToLevelMusic = getClass().getResource("KoWLong.mp3");
+            if (pathToLevelMusic != null) {
+                music = new Media(pathToLevelMusic.toString());
+                mediaPlayer1 = new MediaPlayer(music);
 
-			final double crossfadeDuration = 0.2;
+                mediaPlayer2 = new MediaPlayer(music);
+                currentPlayer = mediaPlayer1;
 
-			mediaPlayer1.currentTimeProperty().addListener((obs, oldTime, newTime) -> {
-				Duration total = mediaPlayer1.getTotalDuration();
-				if (total != null && newTime != null && total.toSeconds() - newTime.toSeconds() <= crossfadeDuration && useFirstPlayer) {
-					startCrossfade(mediaPlayer1, mediaPlayer2, crossfadeDuration);
-					useFirstPlayer = false;
-				}
-			});
-			mediaPlayer2.currentTimeProperty().addListener((obs, oldTime, newTime) -> {
-				Duration total = mediaPlayer2.getTotalDuration();
-				if (total != null && newTime != null && total.toSeconds() - newTime.toSeconds() <= crossfadeDuration && !useFirstPlayer) {
-					startCrossfade(mediaPlayer2, mediaPlayer1, crossfadeDuration);
-					useFirstPlayer = true;
-				}
-			});
+                mediaPlayer1.setVolume(VolumeManager.getVolume());
+                mediaPlayer2.setVolume(0.0);
 
-			mediaPlayer1.play();
-		} else {
-			System.err.println("Musikdatei 'KoWLong.mp3' nicht gefunden!");
-		}
-		maze = new Maze("level1");
+                final double crossfadeDuration = 0.2;
 
-		player = new Player(maze);
-		player.setShootCallback(new ShootCallbackImpl());
+                mediaPlayer1.currentTimeProperty().addListener((obs, oldTime, newTime) -> {
+                    Duration total = mediaPlayer1.getTotalDuration();
+                    if (total != null && newTime != null &&
+                        total.toSeconds() - newTime.toSeconds() <= crossfadeDuration && useFirstPlayer) {
+                        startCrossfade(mediaPlayer1, mediaPlayer2, crossfadeDuration);
+                        useFirstPlayer = false;
+                    }
+                });
+                mediaPlayer2.currentTimeProperty().addListener((obs, oldTime, newTime) -> {
+                    Duration total = mediaPlayer2.getTotalDuration();
+                    if (total != null && newTime != null &&
+                        total.toSeconds() - newTime.toSeconds() <= crossfadeDuration && !useFirstPlayer) {
+                        startCrossfade(mediaPlayer2, mediaPlayer1, crossfadeDuration);
+                        useFirstPlayer = true;
+                    }
+                });
 
-		loadEnemy("level1");
+                currentPlayer.play();
+            } else {
+                System.err.println("Musikdatei 'KoWLong.mp3' nicht gefunden!");
+            }
 
-		// Seta a lista de inimigos no objeto de cada inimigo. Caso um projetil do inimigo seja rebatido pelo jogador, os inimigos se tornarÃƒÂ£o o target daquele projetil
-		for (Enemy e : enemyList) {
-			e.setInimigos(enemyList);
-		}
-		
-		Label score = new Label("Score: " + player.getScore());
-		
-		levelStartTime = System.currentTimeMillis();
-		timeLabel = new Label("Tempo: 00:00");
-		timeLabel.setTextFill(Color.WHITESMOKE);
-		timeLabel.setLayoutX(120);
-		timeLabel.setLayoutY(0);
+            // 2) Usa o level salvo para carregar o mapa
+            String levelName = "level" + level;   // ex: level1, level2...
+            maze = new Maze(levelName);
 
-		player.setRoot(root);
-		
-		Keyboard keyboard = new Keyboard(player, this);
+            // 3) Cria o player e aplica score/vidas do save
+            player = new Player(maze);
+            player.setShootCallback(new ShootCallbackImpl());
 
-		root.getChildren().add(player.getGroup());
-		root.getChildren().addAll(maze.getWalls());
-		root.getChildren().add(score);
-		
-		// Aqui, é onde tinha o label de vidas. Foi comentado e substituído pelos corações.
-		//root.getChildren().add(player.getLivesLabel());
-		try {
-            heartImage = new Image("file:assets/images/heart.png");
-        } catch (Exception ex) {
-            System.err.println("PlayFieldScreen: falha ao carregar heart.png: " + ex.getMessage());
-            heartImage = null;
+            player.setScore(initialScore);
+            player.setLives(initialLives);
+
+            // 4) Carrega inimigos do level correspondente
+            loadEnemy(levelName);
+
+            for (Enemy e : enemyList) {
+                e.setInimigos(enemyList);
+            }
+
+   
+            scoreLabel = new Label("Score: " + player.getScore());
+            root.getChildren().add(scoreLabel);
+
+            if (hasLoadedState) {
+                levelStartTime = System.currentTimeMillis() - savedElapsedTime;
+            } else {
+                levelStartTime = System.currentTimeMillis();
+            }
+            timeLabel = new Label("Tempo: 00:00");
+            timeLabel.setTextFill(Color.WHITESMOKE);
+            timeLabel.setLayoutX(120);
+            timeLabel.setLayoutY(0);
+
+            player.setRoot(root);
+
+            Keyboard keyboard = new Keyboard(player, this);
+
+            root.getChildren().add(player.getGroup());
+            root.getChildren().addAll(maze.getWalls());
+
+            try {
+                heartImage = new Image("file:assets/images/heart.png");
+            } catch (Exception ex) {
+                System.err.println("PlayFieldScreen: falha ao carregar heart.png: " + ex.getMessage());
+                heartImage = null;
+            }
+
+            heartsBox = new HBox(6);
+            heartsBox.setLayoutX(10);
+            heartsBox.setLayoutY(10);
+
+            root.getChildren().add(heartsBox);
+            updateHearts();
+
+            Platform.runLater(() -> {
+                try {
+                    javafx.geometry.Bounds scoreBounds = scoreLabel.getBoundsInParent();
+                    heartsBox.setLayoutX(scoreBounds.getMinX());
+                    heartsBox.setLayoutY(scoreBounds.getMaxY() + 4);
+                } catch (Exception ex) {
+                    System.err.println("Falha ao posicionar heartsBox: " + ex.getMessage());
+                }
+            });
+
+            root.getChildren().add(timeLabel);
+
+            gamePaused = false;
+
+            gameLoop = new AnimationTimer() {
+                private long lastUpdate = 0;
+
+                @Override
+                public void handle(long now) {
+                    if (lastUpdate == 0) {
+                        lastUpdate = now;
+                        return;
+                    }
+
+                    if (now - lastUpdate < nanosPerFrame) {
+                        return; // respeita o FPS configur�vel
+                    }
+
+                    double deltaSeconds = (now - lastUpdate) / 1_000_000_000.0;
+                    lastUpdate = now;
+
+                    if (!gamePaused) {
+                        gameUpdate(deltaSeconds);
+                    }
+                }
+            };
+
+            gameLoop.start();
+
+            Scene scene = new Scene(root, 1024, 740);
+            scene.getStylesheets().add(TitleScreen.class.getResource("controls.css").toExternalForm());
+            scene.setOnKeyPressed(keyboard);
+            scene.setOnKeyReleased(keyboard);
+
+            scene.setFill(Color.BLACK);
+            primaryStage.setScene(scene);
+            primaryStage.show();
+
+            primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+                @Override
+                public void handle(final WindowEvent w) {
+                    if (gameLoop != null) {
+                        gameLoop.stop();
+                    }
+                    if (currentPlayer != null) {
+                        currentPlayer.stop();
+                    }
+                    System.exit(0);
+                }
+            });
+
+            checkAndSaveProgress();
         }
 
-		// Cria o box e posiciona na tela
-        heartsBox = new HBox(6); 
-        heartsBox.setLayoutX(10); 
-        heartsBox.setLayoutY(10); 
 
-        root.getChildren().add(heartsBox);
-        updateHearts();
+        private void gameUpdate(double deltaSeconds) {
 
-		Platform.runLater(() -> {
-            try {
-                javafx.geometry.Bounds scoreBounds = score.getBoundsInParent();
-                heartsBox.setLayoutX(scoreBounds.getMinX());
-                heartsBox.setLayoutY(scoreBounds.getMaxY() + 4); 
-            } catch (Exception ex) {
-                System.err.println("Falha ao posicionar heartsBox: " + ex.getMessage());
+            introSequence();
+
+            // Checa colis�o player-inimigo
+            for (Enemy enemy : enemyList) {
+                if (enemy.isAlive() && player.isAlive() && !player.isInvincible() &&
+                    player.getRectangle().getBoundsInParent().intersects(enemy.getRectangle().getBoundsInParent())) {
+                    player.setAlive(false);
+                    break;
+                }
             }
-        });
 
-		root.getChildren().add(timeLabel); // MELHORIA: Adiciona o contador de tempo Ã  interface
+            if (checkThatPlayerIsStillAlive()) {
 
-		timeline.setCycleCount(Timeline.INDEFINITE);
-		timeline.setAutoReverse(false);
-		
-		EventHandler<ActionEvent> actionPerFrame = new EventHandler<ActionEvent>() {
+                moveAllEnemies();
+                moveAllBullets();
+                scoreLabel.setText("Score: " + player.getScore());
 
-			@Override
-			public void handle(final ActionEvent t) {
-				
-				introSequence();
+                updateLevelTimer();
+                checkAndSaveProgress();
 
-				// Checa colisÃƒÂ£o player-inimigo
-				for (Enemy enemy : enemyList) {
-					if (enemy.isAlive() && player.isAlive() && !player.isInvincible() &&
-						player.getRectangle().getBoundsInParent().intersects(enemy.getRectangle().getBoundsInParent())) {
-						player.setAlive(false);
-						break;
-					}
-				}
-				
-				if(checkThatPlayerIsStillAlive()){
-					moveAllEnemies();
-					moveAllBullets();
-					score.setText("Score: " + player.getScore());
-					
-					// MELHORIA: Atualiza o contador de tempo da fase
-					updateLevelTimer();
-				}else{
-					
-					
-					if(player.getLives() == 0){
+            } else {
 
-						enterHighscore();
-						
-					}else{
-						timeline.pause();
-						player.loseLife();
-						updateHearts();
-						player.setInvincible(true);
-						player.setAlive(true);
-						timeline.play();
-						Timer timer = new Timer();
-						ColorAdjust sombra = new ColorAdjust();
-						sombra.setBrightness(-0.7);
-						player.getImageView().setEffect(sombra);
-						timer.schedule(new TimerTask(){
+                if (player.getLives() == 0) {
 
-							@Override
-							public void run() {
-								Platform.runLater(() -> {
-									player.setInvincible(false);
-									player.getImageView().setEffect(null);
-								});
-								
-							}
-						}, 3000);
-						
-					}
-					
-				}
+                    checkAndSaveProgress();
+                    enterHighscore();
 
-			}
+                } else {
 
-		};
+                    // --- EQUIVALENTE AO timeline.pause() ---
+                    gamePaused = true;
 
-		KeyFrame keyframe = new KeyFrame(Duration.millis(ONE_SECOND / FPS),
-				actionPerFrame);
-		timeline.getKeyFrames().add(keyframe);
-		timeline.play();
+                    player.loseLife();
+                    updateHearts();
 
-		Scene scene = new Scene(root, 1024, 740);
-		scene.getStylesheets().add(TitleScreen.class.getResource("controls.css").toExternalForm());
-		scene.setOnKeyPressed(keyboard);
-		scene.setOnKeyReleased(keyboard);
+                    checkAndSaveProgress();
 
-		scene.setFill(Color.BLACK);
-		primaryStage.setScene(scene);
-		primaryStage.show();
+                    player.setInvincible(true);
+                    player.setAlive(true);
 
-		primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-			@Override
-			public void handle(final WindowEvent w) {
-				timeline.stop();
-				if (currentPlayer != null) {
-					currentPlayer.stop();
-				}
-				System.exit(0);
-			}
-		});
+                    // --- EQUIVALENTE AO timeline.play() COM DELAY ---
+                    Timer timer = new Timer();
+                    ColorAdjust sombra = new ColorAdjust();
+                    sombra.setBrightness(-0.7);
+                    player.getImageView().setEffect(sombra);
 
-	}
+                    timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            Platform.runLater(() -> {
+                                player.setInvincible(false);
+                                player.getImageView().setEffect(null);
+                                gamePaused = false; // volta o jogo a rodar
+                            });
+                        }
+                    }, 3000);
+                }
+            }
+        }
 
+        /*
+         * Melhoria: Verifica as informa��es de vidas, score, tempo e level e salva em arquivo
+         */
+        private void checkAndSaveProgress() {
+            if (player == null) return;
+
+            int currentScore = player.getScore();
+            int currentLives = player.getLives();
+
+            if (currentScore == lastSavedScore && currentLives == lastSavedLives) {
+                return;
+            }
+
+            GameState state = new GameState();
+            state.level = currentLevel;
+            state.score = currentScore;
+            state.lives = currentLives;
+            state.elapsedTime = currentElapsedTimeMs; // ? usa o mesmo tempo exibido
+
+            try {
+                GameStateManager.save(state);
+                lastSavedScore = currentScore;
+                lastSavedLives = currentLives;
+            } catch (IOException e) {
+                System.err.println("Falha ao salvar progresso: " + e.getMessage());
+            }
+        }
+
+
+        
+        
 	private boolean checkThatPlayerIsStillAlive() {
 		if (!player.isAlive()) {
 			gameWasPaused = true;
@@ -433,7 +550,7 @@ public class PlayFieldScreen extends Application {
 		ready.setLayoutY(root.getScene().getHeight()/2);
 
 		if(gameWasPaused){
-			timeline.pause();
+			gamePaused = true;
 			// Pausa ataques de todos os magos
 			for (Enemy e : enemyList) {
 				if (e.getType() == TypeOfFigure.WIZARD) e.stopWizardAttack();
@@ -454,7 +571,7 @@ public class PlayFieldScreen extends Application {
 				@Override
 				public void run() {
 					Platform.runLater(() -> {
-						timeline.play();
+						gamePaused = false;
 						player.toggleMoveable();
 						root.getChildren().remove(ready);
 						// Retoma ataques de todos os magos
@@ -525,7 +642,7 @@ public class PlayFieldScreen extends Application {
 
 	public void pauseGame() throws Exception{
 		if(gameWasPaused){
-			timeline.play();
+			gamePaused = false;
 			for (Enemy e : enemyList) {
     			e.startWizardAttack(); 
 			}
@@ -548,20 +665,22 @@ public class PlayFieldScreen extends Application {
 			for (Enemy e : enemyList) {
     			e.stopWizardAttack(); 
 			}
-			timeline.pause();
+			gamePaused = true;
 			pauseLevelTimer();
 		}
 	}
 
 	public void muteMusic() {
-		if(currentPlayer != null) {
-			if(currentPlayer.isMute()){
-				currentPlayer.setMute(false);
-			}else{
-				currentPlayer.setMute(true);
-			}
-		}
-	}
+        if(currentPlayer != null) {
+            if(currentPlayer.isMute()){
+                currentPlayer.setMute(false);
+                // Restaura o volume salvo ao desmutar
+                currentPlayer.setVolume(VolumeManager.getVolume());
+            }else{
+                currentPlayer.setMute(true);
+            }
+        }
+    }
 
 	// Crossfade da música (impede que haja um corte seco entre cada loop da trilha sonora)
 	private void startCrossfade(MediaPlayer fadingOut, MediaPlayer fadingIn, double durationSeconds) {
@@ -596,13 +715,22 @@ public class PlayFieldScreen extends Application {
 	 * Atualiza o display do timer da fase atual
 	 */
 	private void updateLevelTimer() {
-		if (!levelCompleted && !gamePaused) {
-			long currentTime = System.currentTimeMillis();
-			long elapsedTime = (currentTime - levelStartTime) - pausedTime;
-			String formattedTime = formatTime(elapsedTime);
-			timeLabel.setText("Tempo: " + formattedTime);
-		}
-	}
+            if (!levelCompleted && !gamePaused) {
+                long currentTime = System.currentTimeMillis();
+
+                long elapsedTime = (currentTime - levelStartTime) - pausedTime;
+
+                if (elapsedTime < 0) {
+                    elapsedTime = 0;
+                }
+
+                currentElapsedTimeMs = elapsedTime;
+
+                String formattedTime = formatTime(elapsedTime);
+                timeLabel.setText("Tempo: " + formattedTime);
+            }
+        }
+
 	
 	/**
 	 * Pausa o timer da fase
