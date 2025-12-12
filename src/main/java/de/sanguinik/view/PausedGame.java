@@ -18,7 +18,6 @@ import javafx.scene.control.Slider;
 import javafx.stage.Stage;
 import de.sanguinik.util.VolumeManager;
 
-
 public class PausedGame extends Application{
 
     private Group root;

@@ -77,18 +77,18 @@ public class PlayFieldScreen extends Application {
 	private boolean gameWasPaused = true;
         
         // Load do state
-        private int savedLevel = 1;
-        private int savedScore = 0;
-        private int savedLives = 5;
-        private long savedElapsedTime = 0;
-        private boolean hasLoadedState = false;
-        
-        private long currentElapsedTimeMs = 0; // tempo atual da fase em ms
+  private int savedLevel = 1;
+  private int savedScore = 0;
+  private int savedLives = 5;
+  private long savedElapsedTime = 0;
+  private boolean hasLoadedState = false;
+
+  private long currentElapsedTimeMs = 0; // tempo atual da fase em ms
 
 
-        private int currentLevel = 1;
-        private int lastSavedScore = Integer.MIN_VALUE;
-        private int lastSavedLives = Integer.MIN_VALUE;
+  private int currentLevel = 1;
+  private int lastSavedScore = Integer.MIN_VALUE;
+  private int lastSavedLives = Integer.MIN_VALUE;
         
 	// CoraÃ§Ãµes
 	private Image heartImage;
@@ -114,7 +114,7 @@ public class PlayFieldScreen extends Application {
 
         /*
          * Melhoria de Performace 
-         * * Inclusão de fps configurável
+         * * Inclusï¿½o de fps configurï¿½vel
          */
         public static int TARGET_FPS = FPSConfig.getFPS();
         private long nanosPerFrame = 1_000_000_000L / TARGET_FPS;
@@ -227,7 +227,7 @@ public class PlayFieldScreen extends Application {
             primaryStage.setTitle("Knight of Wor");
             primaryStage.setResizable(false);
 
-            // 1) Valores vindos do save (ou padrão, se não tiver save)
+            // 1) Valores vindos do save (ou padrï¿½o, se nï¿½o tiver save)
             int level = hasLoadedState ? savedLevel : 1;
             int initialScore = hasLoadedState ? savedScore : 0;
             int initialLives = hasLoadedState ? savedLives : 3;
@@ -345,7 +345,7 @@ public class PlayFieldScreen extends Application {
                     }
 
                     if (now - lastUpdate < nanosPerFrame) {
-                        return; // respeita o FPS configurável
+                        return; // respeita o FPS configurï¿½vel
                     }
 
                     double deltaSeconds = (now - lastUpdate) / 1_000_000_000.0;
@@ -389,7 +389,7 @@ public class PlayFieldScreen extends Application {
 
             introSequence();
 
-            // Checa colisão player-inimigo
+            // Checa colisï¿½o player-inimigo
             for (Enemy enemy : enemyList) {
                 if (enemy.isAlive() && player.isAlive() && !player.isInvincible() &&
                     player.getRectangle().getBoundsInParent().intersects(enemy.getRectangle().getBoundsInParent())) {
@@ -448,7 +448,7 @@ public class PlayFieldScreen extends Application {
         }
 
         /*
-         * Melhoria: Verifica as informações de vidas, score, tempo e level e salva em arquivo
+         * Melhoria: Verifica as informaï¿½ï¿½es de vidas, score, tempo e level e salva em arquivo
          */
         private void checkAndSaveProgress() {
             if (player == null) return;

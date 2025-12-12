@@ -76,7 +76,7 @@ public class TitleScreen extends Application {
                             psc.start(primaryStage);
                         } else {
                             Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                            alert.setTitle("Informação");
+                            alert.setTitle("Informaï¿½ï¿½o");
                             alert.setHeaderText(null);
                             alert.setContentText("Nenhum progresso salvo encontrado.");
                             alert.showAndWait();   
@@ -85,7 +85,7 @@ public class TitleScreen extends Application {
                     catch (IOException e) 
                     {
                         Alert alert = new Alert(Alert.AlertType.ERROR);
-                        alert.setTitle("Inconistência ao recuperar avanço do jogo");
+                        alert.setTitle("Inconistï¿½ncia ao recuperar avanï¿½o do jogo");
                         alert.setHeaderText(null);
                         alert.setContentText(e.getMessage());
                         alert.showAndWait();  
